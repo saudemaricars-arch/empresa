@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Empresas ─────────────────────────────────────────────────────────
+    // Leitura pública (páginas públicas das empresas)
+    // Escrita apenas autenticada (futuro) — por ora aberta para desenvolvimento
+    match /empresas/{empresaId} {
+      allow read: if true;
+      allow write: if true; // TODO: restringir com autenticação
+
+      // ─── Notícias (subcoleção) ──────────────────────────────────────────
+      match /noticias/{noticiaId} {
+        allow read: if true;
+        allow write: if true; // TODO: restringir com autenticação
+      }
+      
+      // ─── Outras Subcoleções ─────────────────────────────────────────────
+      match /sugestoes/{document=**} { allow read, write: if true; }
+      match /denuncias/{document=**} { allow read, write: if true; }
+      match /atestados/{document=**} { allow read, write: if true; }
+      match /auxilios/{document=**} { allow read, write: if true; }
+      match /apoioSaude/{document=**} { allow read, write: if true; }
+      match /segurancaTrabalho/{document=**} { allow read, write: if true; }
+    }
+  }
+}

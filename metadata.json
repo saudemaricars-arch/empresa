@@ -1,0 +1,6 @@
+{
+  "name": "Gestão de Empresas",
+  "description": "Plataforma para cadastro rápido e visualização de páginas dedicadas das empresas, incluindo CNPJ e publicações.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
