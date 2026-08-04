@@ -11,9 +11,10 @@ import { OverviewDashboard } from './components/OverviewDashboard';
 import { CompanyPublicPage } from './components/CompanyPublicPage';
 import { UniversalPostsTab } from './components/admin/UniversalPostsTab';
 import { CentralRecebimentos } from './components/admin/CentralRecebimentos';
+import { GestaoGlobal } from './components/admin/GestaoGlobal';
 import { EmpresaPortal } from './components/empresa/EmpresaPortal';
 import { Company, Noticia } from './types';
-import { LayoutDashboard, Building2, Menu, Search, Wifi, WifiOff, Loader2, Send, Inbox } from 'lucide-react';
+import { LayoutDashboard, Building2, Menu, Search, Wifi, WifiOff, Loader2, Send, Inbox, Layers } from 'lucide-react';
 import { useHashRouter } from './hooks/useHashRouter';
 import { generateSlug, ensureUniqueSlug } from './utils/slug';
 import {
@@ -230,6 +231,7 @@ export default function App() {
     { id: 'empresas', label: 'Empresas Cadastradas', icon: Building2 },
     { id: 'central-recebimentos', label: 'Central de Recebimentos', icon: Inbox },
     { id: 'universal-posts', label: 'Posts Universais', icon: Send },
+    { id: 'gestao-global', label: 'Gestão de Demandas', icon: Layers },
   ];
 
   const handleNavClick = (id: string) => {
@@ -237,6 +239,7 @@ export default function App() {
     else if (id === 'dashboard') setCurrentView('dashboard');
     else if (id === 'universal-posts') setCurrentView('universal-posts');
     else if (id === 'central-recebimentos') setCurrentView('central-recebimentos');
+    else if (id === 'gestao-global') setCurrentView('gestao-global');
     setIsSidebarOpen(false);
   };
 
@@ -438,6 +441,10 @@ export default function App() {
             <div className="p-4 sm:p-8 max-w-7xl mx-auto">
               <UniversalPostsTab companies={companies} />
             </div>
+          )}
+
+          {currentView === 'gestao-global' && (
+            <GestaoGlobal companies={companies} />
           )}
 
           {currentView === 'list' && (
