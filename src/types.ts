@@ -116,4 +116,20 @@ export interface Company {
   enableApoioSaude?: boolean;
   enableSegurancaTrabalho?: boolean;
   showHeaderTexts?: boolean;
+  // Controle de acesso multi-tenant
+  temUsuario?: boolean;
+  usuarioEmail?: string;
 }
+
+// ─── Multi-tenant: usuário vinculado a uma empresa ───────────────────────────
+
+export interface EmpresaUsuario {
+  uid: string;
+  email: string;
+  empresaId: string;
+  role: 'empresa';
+  criadoEm: string;
+  criadoPorAdmin: string;
+}
+
+export type UserRole = 'admin' | 'empresa' | null;

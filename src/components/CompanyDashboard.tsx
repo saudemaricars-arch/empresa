@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Company, Noticia } from '../types';
 import {
   ArrowLeft, Building2, Users, MapPin, Phone, Mail, Briefcase, Calendar,
-  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart
+  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart, Brain, PlusCircle, Stethoscope, ShieldCheck, KeyRound
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PublicPageTab } from './PublicPageTab';
@@ -12,6 +12,8 @@ import { AtestadosTab } from './admin/AtestadosTab';
 import { AuxiliosTab } from './admin/AuxiliosTab';
 import { ApoioSaudeTab } from './admin/ApoioSaudeTab';
 import { SegurancaTrabalhoTab } from './admin/SegurancaTrabalhoTab';
+import { CriarAcessoEmpresaModal } from './admin/CriarAcessoEmpresaModal';
+import { AcessoEmpresaTab } from './admin/AcessoEmpresaTab';
 import { onNoticiasSnapshot } from '../lib/firestoreService';
 import { uploadImage } from '../lib/storageService';
 
@@ -26,7 +28,7 @@ interface CompanyDashboardProps {
   onDeleteCompany: (companyId: string) => void;
 }
 
-type TabId = 'overview' | 'blog' | 'pagina' | 'sugestoes' | 'denuncias' | 'atestados' | 'auxilios' | 'apoioSaude' | 'segurancaTrabalho';
+type TabId = 'overview' | 'blog' | 'pagina' | 'sugestoes' | 'denuncias' | 'atestados' | 'auxilios' | 'apoioSaude' | 'segurancaTrabalho' | 'acesso';
 
 export function CompanyDashboard({
   company, onBack, onAddNoticia, onDeleteNoticia, onUpdateCompany, onOpenPublicPreview,
@@ -40,6 +42,7 @@ export function CompanyDashboard({
   const [noticias, setNoticias] = useState<Noticia[]>(company.noticias || []);
   const [uploadingPostImage, setUploadingPostImage] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showAcessoModal, setShowAcessoModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onNoticiasSnapshot(company.id, (data) => {
@@ -93,12 +96,13 @@ export function CompanyDashboard({
     { id: 'overview',   label: 'Visão Geral',    icon: Building2   },
     { id: 'blog',       label: 'Blog',            icon: FileText,   badge: noticias.length },
     { id: 'pagina',     label: 'Página Pública',  icon: Globe       },
-    { id: 'sugestoes',  label: 'Sugestões',       icon: Lightbulb,  badge: novasSugestoes,  badgeColor: 'bg-blue-500' },
+    { id: 'sugestoes',  label: 'Sugestões',       icon: Lightbulb,  badge: novasSugestoes,  badgeColor: 'bg-orange-500' },
     { id: 'denuncias',  label: 'Denúncias',       icon: ShieldAlert, badge: novasDenuncias, badgeColor: 'bg-red-500'  },
-    { id: 'atestados',  label: 'Atestados',       icon: FilePlus,    badge: novosAtestados, badgeColor: 'bg-amber-500' },
-    { id: 'auxilios',   label: 'Apoio Emocional', icon: Heart,       badge: novosAuxilios,  badgeColor: 'bg-teal-500' },
-    { id: 'apoioSaude', label: 'Apoio à Saúde',   icon: Heart,       badge: novosApoiosSaude, badgeColor: 'bg-blue-500' },
-    { id: 'segurancaTrabalho', label: 'Seg. do Trabalho', icon: ShieldAlert, badge: novosSegurancaTrabalho, badgeColor: 'bg-yellow-500' },
+    { id: 'atestados',  label: 'Atestados',       icon: FilePlus,    badge: novosAtestados, badgeColor: 'bg-blue-500' },
+    { id: 'auxilios',   label: 'Apoio Emocional', icon: Brain,       badge: novosAuxilios,  badgeColor: 'bg-purple-500' },
+    { id: 'apoioSaude', label: 'Apoio à Saúde',   icon: Stethoscope, badge: novosApoiosSaude, badgeColor: 'bg-teal-500' },
+    { id: 'segurancaTrabalho', label: 'Seg. do Trabalho', icon: PlusCircle, badge: novosSegurancaTrabalho, badgeColor: 'bg-green-500' },
+    { id: 'acesso',     label: 'Acesso Empresa',  icon: KeyRound },
   ];
 
   return (
@@ -193,10 +197,10 @@ export function CompanyDashboard({
           <div className="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Posts',            value: noticias.length,                 icon: FileText,    color: 'text-blue-600',   bg: 'bg-blue-50' },
-              { label: 'Sugestões',        value: company.sugestoes?.length || 0,  icon: Lightbulb,   color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Sugestões',        value: company.sugestoes?.length || 0,  icon: Lightbulb,   color: 'text-orange-600', bg: 'bg-orange-50' },
               { label: 'Denúncias',        value: company.denuncias?.length || 0,  icon: ShieldAlert, color: 'text-red-600',    bg: 'bg-red-50'   },
-              { label: 'Atestados',        value: company.atestados?.length || 0,  icon: FilePlus,    color: 'text-amber-600',  bg: 'bg-amber-50' },
-              { label: 'Apoio',            value: company.auxilios?.length || 0,   icon: Heart,       color: 'text-teal-600',   bg: 'bg-teal-50' },
+              { label: 'Atestados',        value: company.atestados?.length || 0,  icon: FilePlus,    color: 'text-blue-600',  bg: 'bg-blue-50' },
+              { label: 'Apoio',            value: company.auxilios?.length || 0,   icon: Brain,       color: 'text-purple-600',   bg: 'bg-purple-50' },
             ].map(s => (
               <div key={s.label} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
                 <div className={`w-10 h-10 sm:w-11 sm:h-11 ${s.bg} rounded-xl flex items-center justify-center shrink-0`}><s.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${s.color}`} /></div>
@@ -452,6 +456,20 @@ export function CompanyDashboard({
       {/* ─── Segurança do Trabalho ─── */}
       {activeTab === 'segurancaTrabalho' && (
         <SegurancaTrabalhoTab empresaId={company.id} />
+      )}
+
+      {/* ─── Acesso da Empresa ─── */}
+      {activeTab === 'acesso' && (
+        <AcessoEmpresaTab company={company} onAbrirModal={() => setShowAcessoModal(true)} />
+      )}
+
+      {/* Modal de criar acesso */}
+      {showAcessoModal && (
+        <CriarAcessoEmpresaModal
+          company={company}
+          onClose={() => setShowAcessoModal(false)}
+          onSuccess={() => setShowAcessoModal(false)}
+        />
       )}
     </div>
   );

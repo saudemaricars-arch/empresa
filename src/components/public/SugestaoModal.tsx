@@ -116,14 +116,14 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shrink-0"
-          style={{ background: `linear-gradient(135deg, ${primaryColor}12, ${primaryColor}04)`, borderBottom: `1px solid ${primaryColor}20` }}
+          style={{ background: `linear-gradient(135deg, #f9731612, #f9731604)`, borderBottom: `1px solid #f9731620` }}
         >
           <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-gray-500 py-2 pr-3 sm:hidden">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${primaryColor}20` }}>
-              <Lightbulb className="w-5 h-5" style={{ color: primaryColor }} />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `#f9731620` }}>
+              <Lightbulb className="w-5 h-5" style={{ color: '#f97316' }} />
             </div>
             <div>
               <div className="font-bold text-gray-900 text-sm">Enviar Sugestão</div>
@@ -139,8 +139,8 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-5">
           {enviado ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-5">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: `${primaryColor}15` }}>
-                <CheckCircle className="w-10 h-10" style={{ color: primaryColor }} />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: `#f9731615` }}>
+                <CheckCircle className="w-10 h-10" style={{ color: '#f97316' }} />
               </div>
               <div>
                 <div className="font-bold text-gray-900 text-xl mb-2">Sugestão enviada!</div>
@@ -149,7 +149,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
               <button
                 onClick={onClose}
                 className="px-8 py-3.5 rounded-2xl text-sm font-bold text-white min-h-[48px]"
-                style={{ background: primaryColor }}
+                style={{ background: '#f97316' }}
               >
                 Fechar
               </button>
@@ -185,7 +185,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                       onChange={e => setNome(e.target.value)}
                       placeholder="Seu nome"
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 text-gray-800 min-h-[48px]"
-                      style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                      style={{ '--tw-ring-color': '#f97316' } as React.CSSProperties}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -198,7 +198,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                         onChange={e => setEmail(e.target.value)}
                         placeholder="seu@email.com"
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 text-gray-800 min-h-[48px]"
-                        style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                        style={{ '--tw-ring-color': '#f97316' } as React.CSSProperties}
                       />
                     </div>
                     <div>
@@ -209,7 +209,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                         onChange={e => setTelefone(e.target.value)}
                         placeholder="(00) 00000-0000"
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 text-gray-800 min-h-[48px]"
-                        style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
+                        style={{ '--tw-ring-color': '#f97316' } as React.CSSProperties}
                       />
                     </div>
                   </div>
@@ -227,7 +227,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                       onClick={() => setCategoria(c.label)}
                       className="flex items-center gap-2 px-3 py-3 rounded-xl text-xs font-semibold border-2 transition-all min-h-[48px] text-left"
                       style={categoria === c.label
-                        ? { borderColor: primaryColor, color: primaryColor, background: `${primaryColor}12` }
+                        ? { borderColor: '#f97316', color: '#f97316', background: `#f9731612` }
                         : { borderColor: '#e5e7eb', color: '#6b7280', background: 'white' }
                       }
                     >
@@ -276,7 +276,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                           <label
                             htmlFor="file-upload-sugestao"
                             className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                            style={{ color: primaryColor }}
+                            style={{ color: '#f97316' }}
                           >
                             <span>Selecione um arquivo</span>
                             <input
@@ -307,7 +307,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                   checked={aceito}
                   onChange={e => setAceito(e.target.checked)}
                   className="mt-0.5 shrink-0 w-5 h-5 rounded accent-current"
-                  style={{ accentColor: primaryColor }}
+                  style={{ accentColor: '#f97316' }}
                 />
                 <span className="text-xs text-gray-600 leading-relaxed">
                   Confirmo que minha sugestão é construtiva e visa contribuir positivamente.
@@ -324,7 +324,7 @@ export function SugestaoModal({ empresaId, empresaNome, primaryColor, onClose }:
                 type="submit"
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-60 min-h-[56px]"
-                style={{ background: loading ? '#9ca3af' : primaryColor }}
+                style={{ background: loading ? '#9ca3af' : '#f97316' }}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lightbulb className="w-5 h-5" />}
                 {loading ? 'Enviando...' : 'Enviar Sugestão'}

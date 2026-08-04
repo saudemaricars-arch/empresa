@@ -37,13 +37,13 @@ export function FloatingActions({ empresaId, empresaNome, primaryColor }: Floati
 
             {/* Sugestão */}
             <div className="flex items-center gap-2 animate-fade-in-up">
-              <span className="text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap" style={{ background: primaryColor }}>
+              <span className="text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap" style={{ background: '#f97316' }}>
                 Enviar Sugestão
               </span>
               <button
                 onClick={() => { setModal('sugestao'); setExpanded(false); }}
                 className="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-90"
-                style={{ background: primaryColor }}
+                style={{ background: '#f97316' }}
                 aria-label="Enviar Sugestão"
               >
                 <Lightbulb className="w-5 h-5" />

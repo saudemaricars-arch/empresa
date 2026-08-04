@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Company } from '../types';
 import {
   Building2, Mail, Phone, MapPin, Globe, Users, Calendar,
-  ArrowLeft, Briefcase, ExternalLink, ShieldAlert, Lightbulb, FilePlus, Heart
+  ArrowLeft, Briefcase, ExternalLink, ShieldAlert, Lightbulb, FilePlus, Heart, Brain, PlusCircle, Stethoscope
 } from 'lucide-react';
 import { BlogPublico } from './public/BlogPublico';
 import { SugestaoModal } from './public/SugestaoModal';
@@ -169,8 +169,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
               {company.enableSugestoes !== false && (
                 <button
                   onClick={() => setModal('sugestao')}
-                  className="flex-1 min-w-[140px] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-3 sm:px-6 sm:py-3.5 bg-white text-xs sm:text-sm font-bold rounded-2xl hover:bg-gray-50 transition-all shadow-md border border-gray-200 min-h-[68px] sm:min-h-[52px] text-center"
-                  style={{ color: primaryColor }}
+                  className="flex-1 min-w-[140px] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-3 sm:px-6 sm:py-3.5 bg-orange-500 text-white text-xs sm:text-sm font-bold rounded-2xl hover:bg-orange-600 transition-all shadow-md min-h-[68px] sm:min-h-[52px] text-center"
                 >
                   <Lightbulb className="w-5 h-5 sm:w-4 sm:h-4" /> 
                   <span>Enviar<br className="sm:hidden" /> Sugestão</span>
@@ -190,7 +189,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
                   onClick={() => setModal('auxilio')}
                   className="flex-1 min-w-[140px] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-3 sm:px-6 sm:py-3.5 bg-purple-600 text-white text-xs sm:text-sm font-bold rounded-2xl hover:bg-purple-700 transition-all shadow-md min-h-[68px] sm:min-h-[52px] text-center"
                 >
-                  <Heart className="w-5 h-5 sm:w-4 sm:h-4" /> 
+                  <Brain className="w-5 h-5 sm:w-4 sm:h-4" /> 
                   <span>Apoio<br className="sm:hidden" /> Emocional</span>
                 </button>
               )}
@@ -199,7 +198,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
                   onClick={() => setModal('apoioSaude')}
                   className="flex-1 min-w-[140px] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-3 sm:px-6 sm:py-3.5 bg-teal-500 text-white text-xs sm:text-sm font-bold rounded-2xl hover:bg-teal-600 transition-all shadow-md min-h-[68px] sm:min-h-[52px] text-center"
                 >
-                  <Heart className="w-5 h-5 sm:w-4 sm:h-4" /> 
+                  <Stethoscope className="w-5 h-5 sm:w-4 sm:h-4" /> 
                   <span>Apoio à<br className="sm:hidden" /> Saúde</span>
                 </button>
               )}
@@ -208,7 +207,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
                   onClick={() => setModal('segurancaTrabalho')}
                   className="flex-1 min-w-[140px] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 p-3 sm:px-6 sm:py-3.5 bg-green-600 text-white text-xs sm:text-sm font-bold rounded-2xl hover:bg-green-700 transition-all shadow-md min-h-[68px] sm:min-h-[52px] text-center"
                 >
-                  <ShieldAlert className="w-5 h-5 sm:w-4 sm:h-4" /> 
+                  <PlusCircle className="w-5 h-5 sm:w-4 sm:h-4" /> 
                   <span>Segurança<br className="sm:hidden" /> do Trabalho</span>
                 </button>
               )}

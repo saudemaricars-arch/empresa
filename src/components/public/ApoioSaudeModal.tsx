@@ -90,24 +90,24 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
           <div className="w-12 h-1.5 rounded-full bg-slate-300" />
         </div>
 
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 shrink-0 bg-blue-50 border-b border-blue-100">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 shrink-0 bg-teal-50 border-b border-teal-100">
           <div className="flex items-center gap-3">
             {step === 2 && !success && (
-              <button onClick={() => setStep(1)} className="p-1 -ml-2 text-blue-600 hover:bg-blue-100 rounded-lg">
+              <button onClick={() => setStep(1)} className="p-1 -ml-2 text-teal-600 hover:bg-teal-100 rounded-lg">
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center shadow-sm">
               <Stethoscope className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-blue-900">Apoio à Saúde</h2>
-              <p className="text-xs text-blue-700 font-medium">Descontos Especiais</p>
+              <h2 className="text-lg font-bold text-teal-900">Apoio à Saúde</h2>
+              <p className="text-xs text-teal-700 font-medium">Descontos Especiais</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+            className="p-2 text-teal-600 hover:bg-teal-100 rounded-full transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -116,8 +116,8 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
           {success ? (
             <div className="py-8 text-center flex flex-col items-center justify-center h-full animate-in fade-in zoom-in duration-300">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle className="w-10 h-10 text-blue-600" />
+              <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="w-10 h-10 text-teal-600" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">Solicitação Enviada!</h3>
               <p className="text-slate-500 mb-8 max-w-sm">
@@ -125,7 +125,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
               </p>
               <button
                 onClick={onClose}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
+                className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-colors shadow-lg"
               >
                 Fechar
               </button>
@@ -138,7 +138,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                   <div className="text-center mb-2">
                     <h3 className="text-lg font-semibold text-slate-800">Como podemos ajudar você hoje?</h3>
                     <p className="text-sm text-slate-500 mt-1">Selecione o tipo de consulta que você está buscando</p>
-                    <p className="text-xs text-blue-600 font-medium mt-2 bg-blue-50 py-1.5 px-3 rounded-full inline-block">
+                    <p className="text-xs text-teal-600 font-medium mt-2 bg-teal-50 py-1.5 px-3 rounded-full inline-block">
                       Todas as consultas terão descontos especiais para você colaborador
                     </p>
                   </div>
@@ -151,20 +151,20 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                         onClick={() => setFormData({ ...formData, tipoConsulta: consulta.id })}
                         className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
                           formData.tipoConsulta === consulta.id 
-                            ? 'border-blue-500 bg-blue-50 shadow-md' 
-                            : 'border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50'
+                            ? 'border-teal-500 bg-teal-50 shadow-md' 
+                            : 'border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50/50'
                         }`}
                       >
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          formData.tipoConsulta === consulta.id ? 'bg-blue-500 text-white' : `${consulta.bg} ${consulta.color}`
+                          formData.tipoConsulta === consulta.id ? 'bg-teal-500 text-white' : `${consulta.bg} ${consulta.color}`
                         }`}>
                           <consulta.icon className="w-6 h-6" />
                         </div>
-                        <div className={`font-bold text-sm text-center ${formData.tipoConsulta === consulta.id ? 'text-blue-900' : 'text-slate-700'}`}>
+                        <div className={`font-bold text-sm text-center ${formData.tipoConsulta === consulta.id ? 'text-teal-900' : 'text-slate-700'}`}>
                           {consulta.id}
                         </div>
                         {formData.tipoConsulta === consulta.id && (
-                          <div className="absolute top-2 right-2 text-blue-500"><CheckCircle className="w-4 h-4" /></div>
+                          <div className="absolute top-2 right-2 text-teal-500"><CheckCircle className="w-4 h-4" /></div>
                         )}
                       </button>
                     ))}
@@ -174,7 +174,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                     type="button"
                     disabled={!formData.tipoConsulta}
                     onClick={() => setStep(2)}
-                    className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98] mt-4"
+                    className="w-full py-4 bg-teal-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] mt-4"
                   >
                     Continuar Solicitação
                   </button>
@@ -183,8 +183,8 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
 
               {step === 2 && (
                 <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                  <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-100 flex items-start gap-2 mb-2">
-                    <Stethoscope className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="bg-teal-50 text-teal-800 text-sm p-3 rounded-lg border border-teal-100 flex items-start gap-2 mb-2">
+                    <Stethoscope className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
                     <p>Você escolheu consulta com <strong>{formData.tipoConsulta}</strong>. Preencha seus dados de contato abaixo.</p>
                   </div>
 
@@ -195,7 +195,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                       required
                       value={formData.nomeFuncionario}
                       onChange={e => setFormData({ ...formData, nomeFuncionario: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                       placeholder="Seu nome completo"
                     />
                   </div>
@@ -207,7 +207,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                       required
                       value={formData.matricula}
                       onChange={e => setFormData({ ...formData, matricula: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                       placeholder="000.000.000-00"
                     />
                   </div>
@@ -219,7 +219,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                       required
                       value={formData.telefone}
                       onChange={e => setFormData({ ...formData, telefone: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                       placeholder="(00) 00000-0000"
                     />
                   </div>
@@ -230,7 +230,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                       rows={3}
                       value={formData.motivo}
                       onChange={e => setFormData({ ...formData, motivo: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"
                       placeholder="Sinta-se à vontade para compartilhar..."
                     />
                   </div>
@@ -238,7 +238,7 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 mt-6"
+                    className="w-full py-4 bg-teal-600 text-white rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 mt-6"
                   >
                     {loading ? (
                       <><Loader2 className="w-5 h-5 animate-spin" /> Enviando Solicitação...</>

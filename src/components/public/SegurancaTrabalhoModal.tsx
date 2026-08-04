@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldAlert, CheckCircle, Loader2, ArrowLeft, Upload } from 'lucide-react';
+import { X, PlusCircle, CheckCircle, Loader2, ArrowLeft, Upload } from 'lucide-react';
 import { motion, PanInfo } from 'motion/react';
 import { addSegurancaTrabalho } from '../../lib/firestoreService';
 import { uploadImage } from '../../lib/storageService';
@@ -125,21 +125,21 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
         </div>
 
         <div
-          className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shrink-0 bg-yellow-50 border-b border-yellow-100"
+          className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 shrink-0 bg-green-50 border-b border-green-100"
         >
           <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-gray-500 py-2 pr-3 sm:hidden">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-yellow-100 text-yellow-600">
-              <ShieldAlert className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-green-100 text-green-600">
+              <PlusCircle className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-yellow-900 text-sm">Segurança do Trabalho</div>
-              <div className="text-xs text-yellow-700 truncate max-w-[180px] sm:max-w-xs">{empresaNome}</div>
+              <div className="font-bold text-green-900 text-sm">Segurança do Trabalho</div>
+              <div className="text-xs text-green-700 truncate max-w-[180px] sm:max-w-xs">{empresaNome}</div>
             </div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-yellow-200 text-yellow-600 transition-colors">
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-green-200 text-green-600 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -147,7 +147,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-5">
           {enviado ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-5">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center bg-yellow-100 text-yellow-600">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center bg-green-100 text-green-600">
                 <CheckCircle className="w-10 h-10" />
               </div>
               <div>
@@ -156,7 +156,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
               </div>
               <button
                 onClick={onClose}
-                className="px-8 py-3.5 rounded-2xl text-sm font-bold text-white min-h-[48px] bg-yellow-600 hover:bg-yellow-700"
+                className="px-8 py-3.5 rounded-2xl text-sm font-bold text-white min-h-[48px] bg-green-600 hover:bg-green-700"
               >
                 Fechar
               </button>
@@ -189,7 +189,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                       value={nome}
                       onChange={e => setNome(e.target.value)}
                       placeholder="Seu nome"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 min-h-[48px]"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800 min-h-[48px]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -201,7 +201,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         placeholder="seu@email.com"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 min-h-[48px]"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800 min-h-[48px]"
                       />
                     </div>
                     <div>
@@ -211,7 +211,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                         value={telefone}
                         onChange={e => setTelefone(e.target.value)}
                         placeholder="(00) 00000-0000"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 min-h-[48px]"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800 min-h-[48px]"
                       />
                     </div>
                   </div>
@@ -224,7 +224,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                   required
                   value={categoria}
                   onChange={e => setCategoria(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none transition-all text-sm text-gray-800 appearance-none min-h-[48px]"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-sm text-gray-800 appearance-none min-h-[48px]"
                 >
                   {CATEGORIAS.map(c => (
                     <option key={c} value={c}>{c}</option>
@@ -240,7 +240,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                   value={mensagem}
                   onChange={e => setMensagem(e.target.value)}
                   placeholder="Descreva aqui o que ocorreu ou o que você precisa..."
-                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 text-gray-800 resize-none"
+                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800 resize-none"
                 />
               </div>
 
@@ -266,7 +266,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                         <div className="flex text-sm text-gray-600 justify-center">
                           <label
                             htmlFor="file-upload-seguranca"
-                            className="relative cursor-pointer rounded-md font-medium text-yellow-600 hover:text-yellow-500 focus-within:outline-none"
+                            className="relative cursor-pointer rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none"
                           >
                             <span>Selecione um arquivo</span>
                             <input
@@ -295,7 +295,7 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                   type="checkbox"
                   checked={aceito}
                   onChange={e => setAceito(e.target.checked)}
-                  className="mt-0.5 shrink-0 w-5 h-5 rounded accent-yellow-500 text-yellow-600 focus:ring-yellow-500"
+                  className="mt-0.5 shrink-0 w-5 h-5 rounded accent-green-500 text-green-600 focus:ring-green-500"
                 />
                 <span className="text-xs text-gray-600 leading-relaxed font-medium">
                   Estou ciente e declaro que as informações fornecidas são verdadeiras.
@@ -311,9 +311,9 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-60 min-h-[56px] bg-yellow-600 hover:bg-yellow-700"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-sm font-bold text-white transition-all disabled:opacity-60 min-h-[56px] bg-green-600 hover:bg-green-700"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldAlert className="w-5 h-5" />}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
                 {loading ? 'Enviando...' : 'Enviar Solicitação'}
               </button>
             </form>

@@ -11,6 +11,7 @@ import { OverviewDashboard } from './components/OverviewDashboard';
 import { CompanyPublicPage } from './components/CompanyPublicPage';
 import { UniversalPostsTab } from './components/admin/UniversalPostsTab';
 import { CentralRecebimentos } from './components/admin/CentralRecebimentos';
+import { EmpresaPortal } from './components/empresa/EmpresaPortal';
 import { Company, Noticia } from './types';
 import { LayoutDashboard, Building2, Menu, Search, Wifi, WifiOff, Loader2, Send, Inbox } from 'lucide-react';
 import { useHashRouter } from './hooks/useHashRouter';
@@ -48,7 +49,7 @@ export default function App() {
   const [publicCompany, setPublicCompany] = useState<Company | null | 'loading' | 'not-found'>('loading');
 
   const { route, isPublicRoute } = useHashRouter();
-  const { user } = useAuth();
+  const { user, role, empresaId } = useAuth();
 
   // ─── Migração localStorage → Firestore (executa uma vez) ──────────────────
   useEffect(() => {
@@ -62,15 +63,30 @@ export default function App() {
 
   // ─── Listener em tempo real do Firestore ──────────────────────────────────
   useEffect(() => {
+    // Se não estiver migrado, não faz nada
     if (!migrated) return;
+    
+    // Só carrega todas as empresas se o usuário for explicitamente um administrador
+    if (role !== 'admin') {
+      if (role === 'empresa' || !user) {
+        setLoadingState('ready');
+      }
+      return;
+    }
 
-    const unsubscribe = onEmpresasSnapshot((data) => {
-      setCompanies(data);
-      setLoadingState('ready');
-    });
+    const unsubscribe = onEmpresasSnapshot(
+      (data) => {
+        setCompanies(data);
+        setLoadingState('ready');
+      },
+      (err) => {
+        console.error('Falha ao carregar dados do Firestore:', err);
+        setLoadingState('error');
+      }
+    );
 
     return () => unsubscribe();
-  }, [migrated]);
+  }, [migrated, role, user]);
 
   // ─── Rota pública: busca empresa por slug ─────────────────────────────────
   useEffect(() => {
@@ -196,6 +212,12 @@ export default function App() {
 
   if (!user) {
     return <LoginPage />;
+  }
+
+  // ─── Portal da Empresa (role = 'empresa') ────────────────────────────────────────
+
+  if (role === 'empresa' && empresaId) {
+    return <EmpresaPortal empresaId={empresaId} />;
   }
 
   // ─── Painel Admin (Logado) ────────────────────────────────────────────────

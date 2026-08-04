@@ -2,26 +2,86 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ─── Helpers de Role ──────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      // Admin: autenticado, mas SEM vínculo em empresaUsuarios
+      // (verificado no cliente via ausência do doc)
+      // Para Firestore Rules, verificamos se existe o doc de vínculo
+      return isAuthenticated() &&
+        !exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid));
+    }
+
+    function isEmpresaOwner(empresaId) {
+      // Empresa: tem um doc em empresaUsuarios vinculado a este empresaId
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)).data.empresaId == empresaId;
+    }
+
+    // ─── empresaUsuarios — vínculo uid ↔ empresa ─────────────────────────
+    match /empresaUsuarios/{uid} {
+      // Leitura: o próprio usuário lê seu vínculo OU admin pode listar todos
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      // Escrita: apenas admins (não têm vínculo)
+      allow write: if isAdmin();
+    }
+
     // ─── Empresas ─────────────────────────────────────────────────────────
-    // Leitura pública (páginas públicas das empresas)
-    // Escrita apenas autenticada (futuro) — por ora aberta para desenvolvimento
     match /empresas/{empresaId} {
+      // Leitura pública (páginas públicas das empresas)
       allow read: if true;
-      allow write: if true; // TODO: restringir com autenticação
+      // Escrita: admin ou a própria empresa dona
+      allow write: if isAdmin() || isEmpresaOwner(empresaId);
 
       // ─── Notícias (subcoleção) ──────────────────────────────────────────
       match /noticias/{noticiaId} {
         allow read: if true;
-        allow write: if true; // TODO: restringir com autenticação
+        allow write: if isAdmin() || isEmpresaOwner(empresaId);
       }
-      
-      // ─── Outras Subcoleções ─────────────────────────────────────────────
-      match /sugestoes/{document=**} { allow read, write: if true; }
-      match /denuncias/{document=**} { allow read, write: if true; }
-      match /atestados/{document=**} { allow read, write: if true; }
-      match /auxilios/{document=**} { allow read, write: if true; }
-      match /apoioSaude/{document=**} { allow read, write: if true; }
-      match /segurancaTrabalho/{document=**} { allow read, write: if true; }
+
+      // ─── Subcoleções de demandas ─────────────────────────────────────────
+      // Leitura: admin ou a própria empresa
+      // Escrita: qualquer um pode criar (página pública) + admin/empresa podem atualizar status
+
+      match /sugestoes/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true; // página pública envia
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /denuncias/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true; // página pública envia
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /atestados/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true; // página pública envia
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /auxilios/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true;
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /apoioSaude/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true;
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /segurancaTrabalho/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow create: if true;
+        allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
     }
   }
 }
