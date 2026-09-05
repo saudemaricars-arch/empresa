@@ -10,6 +10,12 @@ interface OverviewDashboardProps {
 }
 
 export function OverviewDashboard({ companies, onViewCompany }: OverviewDashboardProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Calculate KPIs
   const totalCompanies = companies.length;
   const totalEmployees = companies.reduce((acc, c) => acc + c.numeroFuncionarios, 0);
@@ -55,9 +61,9 @@ export function OverviewDashboard({ companies, onViewCompany }: OverviewDashboar
             <TrendingUp className="w-5 h-5 text-slate-500" />
             <h3 className="text-lg font-medium text-slate-900">Empresas por Setor</h3>
           </div>
-          <div className="h-72">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <div className="w-full h-72 min-h-[288px] min-w-0 relative">
+            {isMounted && chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280} minWidth={0} minHeight={280}>
                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />

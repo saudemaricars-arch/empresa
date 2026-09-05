@@ -28,6 +28,10 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
       alert("Por favor, selecione o tipo de consulta desejada.");
       return;
     }
+    if (!formData.telefone.trim()) {
+      alert("Por favor, informe seu WhatsApp ou Telefone para retorno.");
+      return;
+    }
     setLoading(true);
     try {
       await addApoioSaude(companyId, {
@@ -213,7 +217,9 @@ export function ApoioSaudeModal({ companyId, onClose, primaryColor }: ApoioSaude
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp / Telefone</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      WhatsApp / Telefone * <span className="text-teal-600 font-normal text-xs">(obrigatório para retorno)</span>
+                    </label>
                     <input
                       type="tel"
                       required

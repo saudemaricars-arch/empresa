@@ -61,6 +61,10 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!anonimo && !telefone.trim()) {
+      setErro('Por favor, informe seu WhatsApp ou Telefone para retorno.');
+      return;
+    }
     if (!mensagem.trim()) { setErro('Por favor, descreva sua solicitação.'); return; }
     if (!aceito) { setErro('Você precisa declarar que as informações são verdadeiras.'); return; }
     setErro('');
@@ -205,9 +209,12 @@ export function SegurancaTrabalhoModal({ empresaId, empresaNome, primaryColor, o
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5">WhatsApp / Telefone <span className="text-gray-400 font-normal">(opcional)</span></label>
+                      <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                        WhatsApp / Telefone * <span className="text-green-600 font-normal text-[11px]">(obrigatório para retorno)</span>
+                      </label>
                       <input
                         type="tel"
+                        required={!anonimo}
                         value={telefone}
                         onChange={e => setTelefone(e.target.value)}
                         placeholder="(00) 00000-0000"

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Company, Noticia } from '../types';
+import { Company, Noticia, TIPOS_GESTAO } from '../types';
 import {
   ArrowLeft, Building2, Users, MapPin, Phone, Mail, Briefcase, Calendar,
-  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart, Brain, PlusCircle, Stethoscope, ShieldCheck, KeyRound
+  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart, Brain, PlusCircle, Stethoscope, ShieldCheck, KeyRound, Save
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PublicPageTab } from './PublicPageTab';
@@ -22,6 +22,7 @@ interface CompanyDashboardProps {
   onBack: () => void;
   onAddNoticia: (companyId: string, noticia: Omit<Noticia, 'id' | 'data'>) => void;
   onDeleteNoticia: (companyId: string, noticiaId: string) => void;
+  onUpdateNoticia?: (companyId: string, noticiaId: string, noticia: Partial<Omit<Noticia, 'id' | 'data'>>) => void;
   onUpdateCompany: (companyId: string, updates: Partial<Company>) => void;
   onOpenPublicPreview: (company: Company) => void;
   onEditCompany: (company: Company) => void;
@@ -31,11 +32,12 @@ interface CompanyDashboardProps {
 type TabId = 'overview' | 'blog' | 'pagina' | 'sugestoes' | 'denuncias' | 'atestados' | 'auxilios' | 'apoioSaude' | 'segurancaTrabalho' | 'acesso';
 
 export function CompanyDashboard({
-  company, onBack, onAddNoticia, onDeleteNoticia, onUpdateCompany, onOpenPublicPreview,
+  company, onBack, onAddNoticia, onDeleteNoticia, onUpdateNoticia, onUpdateCompany, onOpenPublicPreview,
   onEditCompany, onDeleteCompany,
 }: CompanyDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showNoticiaForm, setShowNoticiaForm] = useState(false);
+  const [editingNoticiaId, setEditingNoticiaId] = useState<string | null>(null);
   const [noticiaForm, setNoticiaForm] = useState({
     titulo: '', resumo: '', conteudo: '', categoria: '', autor: '', imagemUrl: '',
   });
@@ -61,20 +63,53 @@ export function CompanyDashboard({
   const novosApoiosSaude = (company.apoioSaude || []).filter(a => a.status === 'pendente').length;
   const novosSegurancaTrabalho = (company.segurancaTrabalho || []).filter(s => s.status === 'nova').length;
 
-  const handleAddNoticia = (e: React.FormEvent) => {
+  const handleSaveNoticia = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (noticiaForm.titulo.trim() && noticiaForm.conteudo.trim()) {
-      onAddNoticia(company.id, {
-        titulo:    noticiaForm.titulo.trim(),
-        resumo:    noticiaForm.resumo.trim() || undefined,
-        conteudo:  noticiaForm.conteudo.trim(),
-        categoria: noticiaForm.categoria.trim() || undefined,
-        autor:     noticiaForm.autor.trim() || undefined,
-        imagemUrl: noticiaForm.imagemUrl.trim() || undefined,
-      });
+    if (!noticiaForm.titulo.trim() || !noticiaForm.conteudo.trim()) return;
+
+    const payload = {
+      titulo:    noticiaForm.titulo.trim(),
+      resumo:    noticiaForm.resumo.trim() || undefined,
+      conteudo:  noticiaForm.conteudo.trim(),
+      categoria: noticiaForm.categoria.trim() || undefined,
+      autor:     noticiaForm.autor.trim() || undefined,
+      imagemUrl: noticiaForm.imagemUrl.trim() || undefined,
+    };
+
+    try {
+      if (editingNoticiaId) {
+        if (onUpdateNoticia) {
+          await onUpdateNoticia(company.id, editingNoticiaId, payload);
+        }
+        setEditingNoticiaId(null);
+      } else {
+        await onAddNoticia(company.id, payload);
+      }
       setNoticiaForm({ titulo: '', resumo: '', conteudo: '', categoria: '', autor: '', imagemUrl: '' });
       setShowNoticiaForm(false);
+    } catch (err) {
+      console.error('Erro ao salvar publicação:', err);
+      alert('Ocorreu um erro ao salvar a publicação.');
     }
+  };
+
+  const handleStartEditNoticia = (n: Noticia) => {
+    setEditingNoticiaId(n.id);
+    setNoticiaForm({
+      titulo: n.titulo,
+      resumo: n.resumo || '',
+      conteudo: n.conteudo,
+      categoria: n.categoria || '',
+      autor: n.autor || '',
+      imagemUrl: n.imagemUrl || '',
+    });
+    setShowNoticiaForm(true);
+  };
+
+  const handleCancelNoticiaForm = () => {
+    setEditingNoticiaId(null);
+    setNoticiaForm({ titulo: '', resumo: '', conteudo: '', categoria: '', autor: '', imagemUrl: '' });
+    setShowNoticiaForm(false);
   };
 
   const handleRemoveNoticia = async (noticiaId: string) => {
@@ -116,10 +151,41 @@ export function CompanyDashboard({
         <div className="h-32" style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, #1e293b 100%)` }} />
         <div className="px-6 sm:px-8 pb-8 relative">
           <div className="flex justify-between items-end -mt-12 mb-4">
-            <div className="w-24 h-24 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
-              <Building2 className="w-12 h-12" style={{ color: primaryColor }} />
+            <div className="w-24 h-24 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center overflow-hidden p-1.5 relative group">
+              {company.logoUrl ? (
+                <img
+                  src={company.logoUrl}
+                  alt={company.nomeFantasia || company.razaoSocial}
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              ) : (
+                <Building2 className="w-12 h-12" style={{ color: primaryColor }} />
+              )}
+              <button
+                type="button"
+                onClick={() => onEditCompany(company)}
+                className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-medium rounded-2xl backdrop-blur-[1px]"
+                title="Alterar logo da empresa"
+              >
+                <Edit className="w-4 h-4 mb-0.5" />
+                <span>Trocar Logo</span>
+              </button>
             </div>
             <div className="flex items-center gap-3">
+              {company.tipoGestao && TIPOS_GESTAO[company.tipoGestao] ? (
+                <span
+                  className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border ${TIPOS_GESTAO[company.tipoGestao].bgClass} ${TIPOS_GESTAO[company.tipoGestao].textClass} ${TIPOS_GESTAO[company.tipoGestao].borderClass}`}
+                  title={TIPOS_GESTAO[company.tipoGestao].descricao}
+                >
+                  <span className={`w-2 h-2 rounded-full ${TIPOS_GESTAO[company.tipoGestao].dotClass}`} />
+                  {TIPOS_GESTAO[company.tipoGestao].label}
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                  <span className="w-2 h-2 rounded-full bg-slate-300" />
+                  Sem Tag de Gestão
+                </span>
+              )}
               <div className="hidden sm:block bg-slate-100 text-slate-700 font-medium px-3 py-1 text-sm rounded-lg border border-slate-200">
                 CNPJ: {formatCnpj(company.cnpj)}
               </div>
@@ -140,7 +206,16 @@ export function CompanyDashboard({
             </div>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{company.nomeFantasia || company.razaoSocial}</h1>
-          <p className="text-slate-500 mt-1">{company.razaoSocial} <span className="sm:hidden ml-2 text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{formatCnpj(company.cnpj)}</span></p>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-slate-500">{company.razaoSocial}</p>
+            <span className="sm:hidden text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{formatCnpj(company.cnpj)}</span>
+            {company.tipoGestao && TIPOS_GESTAO[company.tipoGestao] && (
+              <span className={`sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${TIPOS_GESTAO[company.tipoGestao].bgClass} ${TIPOS_GESTAO[company.tipoGestao].textClass} ${TIPOS_GESTAO[company.tipoGestao].borderClass}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${TIPOS_GESTAO[company.tipoGestao].dotClass}`} />
+                {TIPOS_GESTAO[company.tipoGestao].badgeLabel}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -178,6 +253,22 @@ export function CompanyDashboard({
               <div className="flex items-start gap-3">
                 <Users className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
                 <div><div className="text-sm font-medium text-slate-900">Tamanho</div><div className="text-sm text-slate-500">{company.numeroFuncionarios} funcionários</div></div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Tag className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+                <div>
+                  <div className="text-sm font-medium text-slate-900">Gestão & Relacionamento (TAG)</div>
+                  <div className="text-sm text-slate-600 mt-0.5">
+                    {company.tipoGestao && TIPOS_GESTAO[company.tipoGestao] ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-1" style={{ borderColor: 'currentColor' }}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${TIPOS_GESTAO[company.tipoGestao].dotClass}`} />
+                        {TIPOS_GESTAO[company.tipoGestao].label}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs italic">Não definida</span>
+                    )}
+                  </div>
+                </div>
               </div>
               {company.setor && <div className="flex items-start gap-3"><Briefcase className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" /><div><div className="text-sm font-medium text-slate-900">Setor</div><div className="text-sm text-slate-500">{company.setor}</div></div></div>}
               {company.dataFundacao && <div className="flex items-start gap-3"><Calendar className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" /><div><div className="text-sm font-medium text-slate-900">Fundação</div><div className="text-sm text-slate-500">{new Date(company.dataFundacao).toLocaleDateString('pt-BR')}</div></div></div>}
@@ -307,7 +398,14 @@ export function CompanyDashboard({
               <p className="text-sm text-slate-500">Posts que aparecem na página pública da empresa</p>
             </div>
             {!showNoticiaForm && (
-              <button onClick={() => setShowNoticiaForm(true)} className="inline-flex items-center gap-2 text-sm font-medium text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              <button
+                onClick={() => {
+                  setEditingNoticiaId(null);
+                  setNoticiaForm({ titulo: '', resumo: '', conteudo: '', categoria: '', autor: '', imagemUrl: '' });
+                  setShowNoticiaForm(true);
+                }}
+                className="inline-flex items-center gap-2 text-sm font-medium text-white bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
                 <Plus className="w-4 h-4" /> Nova Publicação
               </button>
             )}
@@ -315,8 +413,28 @@ export function CompanyDashboard({
 
           {showNoticiaForm && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-              <h3 className="font-semibold text-slate-900 mb-5">Nova Publicação</h3>
-              <form onSubmit={handleAddNoticia} className="space-y-4">
+              <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    {editingNoticiaId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      {editingNoticiaId ? 'Editar Publicação da Campanha' : 'Nova Publicação da Campanha'}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {editingNoticiaId ? 'Atualize as informações da publicação para a página pública' : 'Preencha os dados do post que será exibido no blog'}
+                    </p>
+                  </div>
+                </div>
+                {editingNoticiaId && (
+                  <span className="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-medium">
+                    Modo Edição
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveNoticia} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Título *</label>
@@ -365,6 +483,15 @@ export function CompanyDashboard({
                           }}
                         />
                       </label>
+                      {noticiaForm.imagemUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setNoticiaForm(p => ({ ...p, imagemUrl: '' }))}
+                          className="text-xs text-red-600 hover:text-red-700 underline"
+                        >
+                          Remover Imagem
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="sm:col-span-2">
@@ -373,8 +500,16 @@ export function CompanyDashboard({
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-                  <button type="button" onClick={() => setShowNoticiaForm(false)} className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Cancelar</button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">Publicar</button>
+                  <button type="button" onClick={handleCancelNoticiaForm} className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md border border-slate-200">Cancelar</button>
+                  <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+                    {editingNoticiaId ? (
+                      <>
+                        <Save className="w-4 h-4" /> Salvar Alterações
+                      </>
+                    ) : (
+                      'Publicar'
+                    )}
+                  </button>
                 </div>
               </form>
             </motion.div>
@@ -412,9 +547,22 @@ export function CompanyDashboard({
                       <button onClick={() => setConfirmDeleteId(null)} className="bg-slate-200 text-slate-700 px-2 py-1 rounded hover:bg-slate-300">Não</button>
                     </div>
                   ) : (
-                    <button onClick={() => setConfirmDeleteId(n.id)} className="text-red-600 hover:text-red-700 flex items-center gap-1">
-                      <Trash2 className="w-3.5 h-3.5" /> Remover
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleStartEditNoticia(n)}
+                        className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
+                        title="Editar publicação da campanha"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Editar
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(n.id)}
+                        className="text-red-600 hover:text-red-700 flex items-center gap-1 transition-colors"
+                        title="Remover publicação"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remover
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

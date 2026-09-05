@@ -9,17 +9,21 @@
  */
 
 import {
-  collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+  collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
   getDocs, onSnapshot, query, orderBy, serverTimestamp,
   Timestamp, writeBatch, type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Company, Noticia, Sugestao, Denuncia, Atestado, AuxilioSaudeMental, ApoioSaude, SegurancaTrabalho } from '../types';
+import {
+  Company, Noticia, Sugestao, Denuncia, Atestado, AuxilioSaudeMental,
+  ApoioSaude, SegurancaTrabalho, TipoGestao, PostUniversal, PostUniversalDestinatario,
+} from '../types';
 
 // ─── Refs de coleção ─────────────────────────────────────────────────────────
 
 const empresasCol = () => collection(db, 'empresas');
 const noticiasCol  = (id: string) => collection(db, 'empresas', id, 'noticias');
+const postsUniversaisCol = () => collection(db, 'postsUniversais');
 const sugestoesCol = (id: string) => collection(db, 'empresas', id, 'sugestoes');
 const denunciasCol = (id: string) => collection(db, 'empresas', id, 'denuncias');
 const atestadosCol = (id: string) => collection(db, 'empresas', id, 'atestados');
@@ -41,6 +45,7 @@ function docToCompany(id: string, d: Record<string, unknown>): Company {
     cnpj: (d.cnpj as string) || '',
     razaoSocial: (d.razaoSocial as string) || '',
     nomeFantasia: (d.nomeFantasia as string) || undefined,
+    tipoGestao: (d.tipoGestao as TipoGestao) || undefined,
     numeroFuncionarios: (d.numeroFuncionarios as number) || 0,
     dataFundacao: d.dataFundacao ? tsToIso(d.dataFundacao) : undefined,
     email: (d.email as string) || undefined,
@@ -73,6 +78,7 @@ function docToCompany(id: string, d: Record<string, unknown>): Company {
 function docToNoticia(id: string, d: Record<string, unknown>): Noticia {
   return {
     id,
+    universalPostId: (d.universalPostId as string) || undefined,
     titulo: (d.titulo as string) || '',
     resumo: (d.resumo as string) || undefined,
     conteudo: (d.conteudo as string) || '',
@@ -80,6 +86,23 @@ function docToNoticia(id: string, d: Record<string, unknown>): Noticia {
     imagemUrl: (d.imagemUrl as string) || undefined,
     categoria: (d.categoria as string) || undefined,
     autor: (d.autor as string) || undefined,
+  };
+}
+
+function docToPostUniversal(id: string, d: Record<string, unknown>): PostUniversal {
+  return {
+    id,
+    titulo: (d.titulo as string) || '',
+    resumo: (d.resumo as string) || undefined,
+    conteudo: (d.conteudo as string) || '',
+    data: tsToIso(d.data || d.criadoEm),
+    imagemUrl: (d.imagemUrl as string) || undefined,
+    categoria: (d.categoria as string) || undefined,
+    autor: (d.autor as string) || undefined,
+    empresaIds: (d.empresaIds as string[]) || [],
+    destinatarios: (d.destinatarios as PostUniversalDestinatario[]) || [],
+    criadoEm: tsToIso(d.criadoEm),
+    atualizadoEm: d.atualizadoEm ? tsToIso(d.atualizadoEm) : undefined,
   };
 }
 
@@ -91,7 +114,12 @@ function docToSugestao(id: string, d: Record<string, unknown>): Sugestao {
     telefone: (d.telefone as string) || undefined,
     categoria: (d.categoria as string) || 'Geral',
     mensagem: (d.mensagem as string) || '',
+    anexo: (d.anexo as string) || undefined,
     status: (d.status as Sugestao['status']) || 'nova',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -106,6 +134,10 @@ function docToDenuncia(id: string, d: Record<string, unknown>): Denuncia {
     descricao: (d.descricao as string) || '',
     provas: (d.provas as string) || undefined,
     status: (d.status as Denuncia['status']) || 'nova',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -114,15 +146,20 @@ function docToAtestado(id: string, d: Record<string, unknown>): Atestado {
   return {
     id,
     nomeFuncionario: (d.nomeFuncionario as string) || 'Desconhecido',
-    telefone: (d.telefone as string) || (d.setor as string) || 'Não informado',
+    telefone: (d.telefone as string) || (d.whatsapp as string) || '',
     nomeMedico: (d.nomeMedico as string) || 'Não informado',
     crmMedico: (d.crmMedico as string) || 'Não informado',
     matricula: (d.matricula as string) || undefined,
+    setor: (d.setor as string) || undefined,
     dataAfastamento: (d.dataAfastamento as string) || tsToIso(d.criadoEm),
     diasAfastamento: (d.diasAfastamento as number) || 1,
     motivoCid: (d.motivoCid as string) || undefined,
     arquivoUrl: (d.arquivoUrl as string) || '',
     status: d.status as Atestado['status'] || 'pendente',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -132,11 +169,16 @@ function docToAuxilio(id: string, d: Record<string, unknown>): AuxilioSaudeMenta
     id,
     nomeFuncionario: (d.nomeFuncionario as string) || 'Desconhecido',
     matricula: (d.matricula as string) || undefined,
+    setor: (d.setor as string) || undefined,
     telefone: (d.telefone as string) || '',
     tipoAuxilio: d.tipoAuxilio as AuxilioSaudeMental['tipoAuxilio'] || 'psicologico',
     motivoSolicitacao: (d.motivoSolicitacao as string) || 'Não informado',
     descricao: (d.descricao as string) || undefined,
     status: d.status as AuxilioSaudeMental['status'] || 'pendente',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -146,10 +188,15 @@ function docToApoioSaude(id: string, d: Record<string, unknown>): ApoioSaude {
     id,
     nomeFuncionario: (d.nomeFuncionario as string) || 'Desconhecido',
     matricula: (d.matricula as string) || '',
+    setor: (d.setor as string) || undefined,
     telefone: (d.telefone as string) || '',
     tipoConsulta: (d.tipoConsulta as string) || '',
     motivo: (d.motivo as string) || undefined,
     status: d.status as ApoioSaude['status'] || 'pendente',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -165,6 +212,10 @@ function docToSegurancaTrabalho(id: string, d: Record<string, unknown>): Seguran
     anexo: (d.anexo as string) || undefined,
     ciente: (d.ciente as boolean) || false,
     status: d.status as SegurancaTrabalho['status'] || 'nova',
+    resposta: (d.resposta as string) || undefined,
+    respondidoEm: d.respondidoEm ? tsToIso(d.respondidoEm) : undefined,
+    observacaoInterna: (d.observacaoInterna as string) || undefined,
+    respondidoPor: (d.respondidoPor as string) || undefined,
     criadoEm: tsToIso(d.criadoEm),
   };
 }
@@ -243,6 +294,7 @@ export async function createEmpresa(company: Omit<Company, 'id' | 'noticias' | '
     cnpj: company.cnpj,
     razaoSocial: company.razaoSocial,
     nomeFantasia: company.nomeFantasia || null,
+    tipoGestao: company.tipoGestao || 'gerenciada_multimed',
     numeroFuncionarios: company.numeroFuncionarios,
     dataFundacao: company.dataFundacao || null,
     email: company.email || null,
@@ -259,6 +311,8 @@ export async function createEmpresa(company: Omit<Company, 'id' | 'noticias' | '
     enableDenuncias: company.enableDenuncias !== undefined ? company.enableDenuncias : true,
     enableAtestados: company.enableAtestados !== undefined ? company.enableAtestados : true,
     enableAuxilios: company.enableAuxilios !== undefined ? company.enableAuxilios : true,
+    enableApoioSaude: company.enableApoioSaude !== undefined ? company.enableApoioSaude : true,
+    enableSegurancaTrabalho: company.enableSegurancaTrabalho !== undefined ? company.enableSegurancaTrabalho : true,
     showHeaderTexts: company.showHeaderTexts !== undefined ? company.showHeaderTexts : true,
     criadoEm: serverTimestamp(),
     atualizadoEm: serverTimestamp(),
@@ -267,7 +321,7 @@ export async function createEmpresa(company: Omit<Company, 'id' | 'noticias' | '
 }
 
 export async function updateEmpresa(empresaId: string, updates: Partial<Company>): Promise<void> {
-  const { id, noticias, sugestoes, denuncias, atestados, auxilios, ...rest } = updates as Company;
+  const { id, noticias, sugestoes, denuncias, atestados, auxilios, apoioSaude, segurancaTrabalho, ...rest } = updates as Company;
   await updateDoc(doc(db, 'empresas', empresaId), { ...rest, atualizadoEm: serverTimestamp() });
 }
 
@@ -306,14 +360,66 @@ export async function deleteNoticia(empresaId: string, noticiaId: string): Promi
   await deleteDoc(doc(db, 'empresas', empresaId, 'noticias', noticiaId));
 }
 
+export async function updateNoticia(
+  empresaId: string,
+  noticiaId: string,
+  noticia: Partial<Omit<Noticia, 'id' | 'data'>>
+): Promise<void> {
+  const updates: Record<string, unknown> = {};
+  if (noticia.titulo !== undefined) updates.titulo = noticia.titulo;
+  if (noticia.resumo !== undefined) updates.resumo = noticia.resumo || null;
+  if (noticia.conteudo !== undefined) updates.conteudo = noticia.conteudo;
+  if (noticia.imagemUrl !== undefined) updates.imagemUrl = noticia.imagemUrl || null;
+  if (noticia.categoria !== undefined) updates.categoria = noticia.categoria || null;
+  if (noticia.autor !== undefined) updates.autor = noticia.autor || null;
+  updates.atualizadoEm = serverTimestamp();
+
+  await updateDoc(doc(db, 'empresas', empresaId, 'noticias', noticiaId), updates);
+}
+
+export function onPostsUniversaisSnapshot(cb: (posts: PostUniversal[]) => void): Unsubscribe {
+  const q = query(postsUniversaisCol(), orderBy('criadoEm', 'desc'));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const list = snap.docs.map(ds => docToPostUniversal(ds.id, ds.data() as Record<string, unknown>));
+      cb(list);
+    },
+    (err) => console.error('Erro no snapshot de postsUniversais:', err)
+  );
+}
+
 export async function addUniversalPost(
   empresaIds: string[],
-  noticia: Omit<Noticia, 'id' | 'data'>
-): Promise<void> {
-  if (empresaIds.length === 0) return;
+  noticia: Omit<Noticia, 'id' | 'data'>,
+  destinatarios?: PostUniversalDestinatario[]
+): Promise<string> {
+  if (empresaIds.length === 0) return '';
   
+  // 1. Criar doc mestre em postsUniversais
+  const postRef = doc(postsUniversaisCol());
+  const postId = postRef.id;
+
+  const masterData = {
+    titulo: noticia.titulo,
+    resumo: noticia.resumo || null,
+    conteudo: noticia.conteudo,
+    imagemUrl: noticia.imagemUrl || null,
+    categoria: noticia.categoria || null,
+    autor: noticia.autor || null,
+    empresaIds,
+    destinatarios: destinatarios || [],
+    data: serverTimestamp(),
+    criadoEm: serverTimestamp(),
+    atualizadoEm: serverTimestamp(),
+  };
+
   const batch = writeBatch(db);
-  const data = {
+  batch.set(postRef, masterData);
+
+  // 2. Criar réplica em cada empresa com universalPostId
+  const itemData = {
+    universalPostId: postId,
     titulo: noticia.titulo,
     resumo: noticia.resumo || null,
     conteudo: noticia.conteudo,
@@ -325,16 +431,117 @@ export async function addUniversalPost(
 
   empresaIds.forEach(empresaId => {
     const docRef = doc(noticiasCol(empresaId));
-    batch.set(docRef, data);
+    batch.set(docRef, itemData);
   });
 
   await batch.commit();
+  return postId;
+}
+
+export async function updateUniversalPost(
+  postId: string,
+  updates: Partial<Omit<Noticia, 'id' | 'data'>>,
+  empresaIds?: string[]
+): Promise<void> {
+  const postRef = doc(db, 'postsUniversais', postId);
+  const masterUpdates: Record<string, unknown> = {
+    atualizadoEm: serverTimestamp(),
+  };
+  if (updates.titulo !== undefined) masterUpdates.titulo = updates.titulo;
+  if (updates.resumo !== undefined) masterUpdates.resumo = updates.resumo || null;
+  if (updates.conteudo !== undefined) masterUpdates.conteudo = updates.conteudo;
+  if (updates.imagemUrl !== undefined) masterUpdates.imagemUrl = updates.imagemUrl || null;
+  if (updates.categoria !== undefined) masterUpdates.categoria = updates.categoria || null;
+  if (updates.autor !== undefined) masterUpdates.autor = updates.autor || null;
+
+  await updateDoc(postRef, masterUpdates);
+
+  // Buscar empresaIds se não fornecido
+  let targetEmpresaIds = empresaIds;
+  if (!targetEmpresaIds) {
+    const snap = await getDoc(postRef);
+    if (snap.exists()) {
+      targetEmpresaIds = (snap.data().empresaIds as string[]) || [];
+    } else {
+      targetEmpresaIds = [];
+    }
+  }
+
+  // Atualizar réplicas nas empresas vinculadas
+  for (const empresaId of targetEmpresaIds) {
+    try {
+      const q = query(noticiasCol(empresaId));
+      const nSnap = await getDocs(q);
+      const batch = writeBatch(db);
+      let hasUpdates = false;
+
+      nSnap.forEach(d => {
+        const data = d.data();
+        if (data.universalPostId === postId) {
+          batch.update(d.ref, {
+            ...masterUpdates,
+            atualizadoEm: serverTimestamp(),
+          });
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates) {
+        await batch.commit();
+      }
+    } catch (err) {
+      console.warn(`Erro ao atualizar réplica na empresa ${empresaId}:`, err);
+    }
+  }
+}
+
+export async function deleteUniversalPost(
+  postId: string,
+  empresaIds?: string[]
+): Promise<void> {
+  const postRef = doc(db, 'postsUniversais', postId);
+
+  // Buscar empresaIds se não fornecido
+  let targetEmpresaIds = empresaIds;
+  if (!targetEmpresaIds) {
+    const snap = await getDoc(postRef);
+    if (snap.exists()) {
+      targetEmpresaIds = (snap.data().empresaIds as string[]) || [];
+    } else {
+      targetEmpresaIds = [];
+    }
+  }
+
+  // 1. Deletar réplicas nas empresas
+  for (const empresaId of targetEmpresaIds) {
+    try {
+      const q = query(noticiasCol(empresaId));
+      const nSnap = await getDocs(q);
+      const batch = writeBatch(db);
+      let hasDeletes = false;
+
+      nSnap.forEach(d => {
+        const data = d.data();
+        if (data.universalPostId === postId) {
+          batch.delete(d.ref);
+          hasDeletes = true;
+        }
+      });
+
+      if (hasDeletes) {
+        await batch.commit();
+      }
+    } catch (err) {
+      console.warn(`Erro ao deletar réplica da empresa ${empresaId}:`, err);
+    }
+  }
+
+  // 2. Deletar documento mestre
+  await deleteDoc(postRef);
 }
 
 export async function deleteUniversalPostByTitle(empresaIds: string[], tituloExact: string): Promise<number> {
   let count = 0;
-  // Firestore allows up to 500 writes in a batch, but we can just use deleteDoc individually or in batches.
-  // We'll do individual deletes for simplicity.
   const batch = writeBatch(db);
   
   const promises = empresaIds.map(async (empresaId) => {
@@ -376,6 +583,7 @@ export async function addSugestao(
     telefone: data.telefone || null,
     categoria: data.categoria,
     mensagem: data.mensagem,
+    anexo: data.anexo || null,
     status: 'nova',
     criadoEm: serverTimestamp(),
   });
@@ -559,6 +767,42 @@ export function onSegurancaTrabalhoSnapshot(
   return onSnapshot(q, (snap) => {
     cb(snap.docs.map((d) => docToSegurancaTrabalho(d.id, d.data() as Record<string, unknown>)));
   });
+}
+
+export interface TratativaDemandaData {
+  status: string;
+  resposta?: string;
+  observacaoInterna?: string;
+  respondidoPor?: string;
+  respondidoEm?: string;
+}
+
+export async function salvarTratativaDemanda(
+  empresaId: string,
+  modulo: string,
+  itemId: string,
+  dados: TratativaDemandaData
+): Promise<void> {
+  let colName = 'sugestoes';
+  const m = modulo.toLowerCase();
+  if (m === 'sugestoes' || m === 'sugestao' || m === 'sugestão') colName = 'sugestoes';
+  else if (m === 'denuncias' || m === 'denuncia' || m === 'denúncia') colName = 'denuncias';
+  else if (m === 'atestados' || m === 'atestado') colName = 'atestados';
+  else if (m === 'auxilios' || m === 'apoio emocional' || m === 'auxilio' || m === 'auxílio') colName = 'auxilios';
+  else if (m === 'apoiosaude' || m === 'apoio à saúde' || m === 'apoio a saude') colName = 'apoioSaude';
+  else if (m === 'segurancatrabalho' || m === 'segurança do trabalho' || m === 'seguranca do trabalho') colName = 'segurancaTrabalho';
+
+  const docRef = doc(db, 'empresas', empresaId, colName, itemId);
+  const payload: Record<string, any> = {
+    status: dados.status,
+    atualizadoEm: serverTimestamp(),
+  };
+  if (dados.resposta !== undefined) payload.resposta = dados.resposta;
+  if (dados.observacaoInterna !== undefined) payload.observacaoInterna = dados.observacaoInterna;
+  if (dados.respondidoPor !== undefined) payload.respondidoPor = dados.respondidoPor;
+  if (dados.respondidoEm !== undefined) payload.respondidoEm = dados.respondidoEm;
+
+  await updateDoc(docRef, payload);
 }
 
 // ─── Migração localStorage → Firestore ────────────────────────────────────────

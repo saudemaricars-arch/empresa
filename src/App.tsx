@@ -23,6 +23,7 @@ import {
   updateEmpresa,
   addNoticia,
   deleteNoticia,
+  updateNoticia,
   migrateFromLocalStorage,
   getEmpresaBySlug,
   deleteEmpresa,
@@ -141,6 +142,13 @@ export default function App() {
   const handleDeleteNoticia = useCallback(
     async (companyId: string, noticiaId: string) => {
       await deleteNoticia(companyId, noticiaId);
+    },
+    []
+  );
+
+  const handleUpdateNoticia = useCallback(
+    async (companyId: string, noticiaId: string, noticiaData: Partial<Omit<Noticia, 'id' | 'data'>>) => {
+      await updateNoticia(companyId, noticiaId, noticiaData);
     },
     []
   );
@@ -481,6 +489,7 @@ export default function App() {
               onBack={() => setCurrentView('list')}
               onAddNoticia={handleAddNoticia}
               onDeleteNoticia={handleDeleteNoticia}
+              onUpdateNoticia={handleUpdateNoticia}
               onUpdateCompany={handleUpdateCompany}
               onOpenPublicPreview={handleOpenPublicPreview}
               onEditCompany={() => setCurrentView('edit')}

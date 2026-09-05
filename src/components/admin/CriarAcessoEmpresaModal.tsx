@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, ShieldCheck, Loader2, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { Company } from '../../types';
 import { criarUsuarioEmpresa, removerUsuarioEmpresa } from '../../lib/empresaUsuariosService';

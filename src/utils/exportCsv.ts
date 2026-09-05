@@ -5,10 +5,11 @@ export function exportToCsv(filename: string, rows: object[]) {
   
   const csvRows = rows.map(row => {
     return keys.map(k => {
-      let cell = row[k as keyof typeof row] === null || row[k as keyof typeof row] === undefined ? '' : row[k as keyof typeof row];
-      cell = cell instanceof Date
-        ? cell.toLocaleString('pt-BR')
-        : cell.toString();
+      const rawVal: any = row[k as keyof typeof row];
+      let cell: string = '';
+      if (rawVal !== null && rawVal !== undefined) {
+        cell = rawVal instanceof Date ? rawVal.toLocaleString('pt-BR') : String(rawVal);
+      }
       
       // Remove quebras de linha que quebram as linhas da planilha no Excel
       cell = cell.replace(/\r?\n|\r/g, ' ');

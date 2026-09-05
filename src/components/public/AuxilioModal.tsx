@@ -29,6 +29,10 @@ export function AuxilioModal({ companyId, onClose, primaryColor }: AuxilioModalP
       alert("Por favor, selecione o tipo de apoio desejado.");
       return;
     }
+    if (!formData.telefone.trim()) {
+      alert("Por favor, informe seu WhatsApp ou Telefone para retorno.");
+      return;
+    }
     setLoading(true);
     try {
       await addAuxilio(companyId, {
@@ -224,7 +228,9 @@ export function AuxilioModal({ companyId, onClose, primaryColor }: AuxilioModalP
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp / Telefone</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      WhatsApp / Telefone * <span className="text-purple-600 font-normal text-xs">(obrigatório para retorno)</span>
+                    </label>
                     <input
                       type="tel"
                       required

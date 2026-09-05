@@ -61,6 +61,7 @@ function SummaryCard({
   active,
   onClick,
 }: {
+  key?: any;
   icon: any;
   label: string;
   count: number;
@@ -222,12 +223,12 @@ export function EmpresaPortal({ empresaId }: Props) {
   // Abas disponíveis baseadas nos módulos habilitados
   type AbaConfig = { id: AbaId; label: string; icon: any; dados: any[]; color: string; enabled: boolean };
   const abas: AbaConfig[] = [
-    { id: 'sugestoes',        label: 'Sugestões',          icon: MessageSquare, dados: filterByDate(sugestoes),  color: '#3b82f6', enabled: company?.enableSugestoes !== false },
-    { id: 'denuncias',        label: 'Denúncias',           icon: AlertTriangle, dados: filterByDate(denuncias),  color: '#ef4444', enabled: company?.enableDenuncias !== false },
-    { id: 'atestados',        label: 'Atestados',           icon: FileText,      dados: filterByDate(atestados),  color: '#f59e0b', enabled: company?.enableAtestados !== false },
-    { id: 'auxilios',         label: 'Auxílio Mental',      icon: Heart,         dados: filterByDate(auxilios),   color: '#ec4899', enabled: company?.enableAuxilios !== false },
-    { id: 'apoioSaude',       label: 'Apoio à Saúde',       icon: Stethoscope,   dados: filterByDate(apoioSaude), color: '#10b981', enabled: company?.enableApoioSaude !== false },
-    { id: 'segurancaTrabalho',label: 'Seg. do Trabalho',    icon: HardHat,       dados: filterByDate(seguranca),  color: '#f97316', enabled: company?.enableSegurancaTrabalho !== false },
+    { id: 'sugestoes' as AbaId,        label: 'Sugestões',          icon: MessageSquare, dados: filterByDate(sugestoes),  color: '#3b82f6', enabled: company?.enableSugestoes !== false },
+    { id: 'denuncias' as AbaId,        label: 'Denúncias',           icon: AlertTriangle, dados: filterByDate(denuncias),  color: '#ef4444', enabled: company?.enableDenuncias !== false },
+    { id: 'atestados' as AbaId,        label: 'Atestados',           icon: FileText,      dados: filterByDate(atestados),  color: '#f59e0b', enabled: company?.enableAtestados !== false },
+    { id: 'auxilios' as AbaId,         label: 'Auxílio Mental',      icon: Heart,         dados: filterByDate(auxilios),   color: '#ec4899', enabled: company?.enableAuxilios !== false },
+    { id: 'apoioSaude' as AbaId,       label: 'Apoio à Saúde',       icon: Stethoscope,   dados: filterByDate(apoioSaude), color: '#10b981', enabled: company?.enableApoioSaude !== false },
+    { id: 'segurancaTrabalho' as AbaId,label: 'Seg. do Trabalho',    icon: HardHat,       dados: filterByDate(seguranca),  color: '#f97316', enabled: company?.enableSegurancaTrabalho !== false },
   ].filter(a => a.enabled);
 
   const abaAtual = abas.find(a => a.id === abaAtiva) || abas[0];
@@ -518,6 +519,7 @@ function ListaItem({
   onToggle,
   onPreview,
 }: {
+  key?: any;
   item: any;
   abaId: AbaId;
   empresaId: string;

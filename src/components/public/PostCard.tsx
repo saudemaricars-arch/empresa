@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Noticia } from '../../types';
 import { Calendar, Tag, User, ArrowRight } from 'lucide-react';
 
 interface PostCardProps {
+  key?: React.Key;
   noticia: Noticia;
   primaryColor: string;
   rgb: string;

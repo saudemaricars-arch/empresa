@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Company } from '../types';
-import { ArrowLeft, Building2, Save, AlertCircle, Globe, FileText } from 'lucide-react';
+import { Company, TipoGestao, TIPOS_GESTAO } from '../types';
+import {
+  ArrowLeft, Building2, Save, AlertCircle, Globe, FileText, Tag, ShieldCheck, UserCheck, Sparkles,
+  Upload, Image as ImageIcon, Loader2, RefreshCw, Trash2
+} from 'lucide-react';
 import { motion } from 'motion/react';
+import { uploadImage } from '../lib/storageService';
 
 interface CompanyFormProps {
   onSave: (company: Omit<Company, 'id' | 'noticias' | 'slug'>) => void;
@@ -15,6 +19,7 @@ export function CompanyForm({ onSave, onCancel, existingCnpjs, initialData }: Co
     cnpj: initialData?.cnpj || '',
     razaoSocial: initialData?.razaoSocial || '',
     nomeFantasia: initialData?.nomeFantasia || '',
+    tipoGestao: (initialData?.tipoGestao || 'gerenciada_multimed') as TipoGestao,
     numeroFuncionarios: initialData?.numeroFuncionarios?.toString() || '',
     dataFundacao: initialData?.dataFundacao ? initialData.dataFundacao.split('T')[0] : '',
     email: initialData?.email || '',
@@ -24,7 +29,10 @@ export function CompanyForm({ onSave, onCancel, existingCnpjs, initialData }: Co
     descricao: initialData?.descricao || '',
     website: initialData?.website || '',
     corPrimaria: initialData?.corPrimaria || '#2563EB',
+    logoUrl: initialData?.logoUrl || '',
   });
+
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -87,6 +95,7 @@ export function CompanyForm({ onSave, onCancel, existingCnpjs, initialData }: Co
         ...formData,
         cnpj: formData.cnpj.replace(/\D/g, ''),
         numeroFuncionarios: parseInt(formData.numeroFuncionarios, 10),
+        logoUrl: formData.logoUrl.trim() || undefined,
       });
     }
   };
@@ -238,6 +247,231 @@ export function CompanyForm({ onSave, onCancel, existingCnpjs, initialData }: Co
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO: Logo da Empresa & Identidade Visual */}
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-blue-600" />
+                Logo da Empresa & Identidade
+              </h2>
+              <span className="text-xs font-medium text-slate-400">Exibida no cabeçalho e na página pública</span>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">
+              Atualize a logomarca da empresa ou sincronize diretamente com a logo definida na aba de criação da página.
+            </p>
+
+            <div className="bg-slate-50/70 rounded-xl p-5 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              {/* Preview Box */}
+              <div className="w-24 h-24 bg-white rounded-2xl border-2 border-slate-200 border-dashed flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative group">
+                {formData.logoUrl ? (
+                  <img
+                    src={formData.logoUrl}
+                    alt="Logo da Empresa"
+                    className="w-full h-full object-contain p-1.5"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400">
+                    <Building2 className="w-8 h-8" />
+                    <span className="text-[10px] mt-1 font-medium">Sem Logo</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Controles */}
+              <div className="flex-1 space-y-3 w-full">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className={`inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-50 shadow-sm transition-colors ${uploadingLogo ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> : <Upload className="w-4 h-4 text-blue-600" />}
+                    {uploadingLogo ? 'Enviando...' : (formData.logoUrl ? 'Trocar Imagem' : 'Fazer Upload do Logo')}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          setUploadingLogo(true);
+                          const ext = file.name.split('.').pop() || 'png';
+                          const path = `empresas/${initialData?.id || 'temp'}/logo_${Date.now()}.${ext}`;
+                          const url = await uploadImage(path, file);
+                          setFormData((prev) => ({ ...prev, logoUrl: url }));
+                        } catch (error) {
+                          console.error('Erro ao fazer upload da logo:', error);
+                          alert('Erro ao enviar imagem da logo.');
+                        } finally {
+                          setUploadingLogo(false);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  {initialData?.logoUrl && initialData.logoUrl !== formData.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, logoUrl: initialData.logoUrl || '' }))}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                      title="Restaurar a logo configurada anteriormente"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Puxar logo da Página Pública
+                    </button>
+                  )}
+
+                  {formData.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, logoUrl: '' }))}
+                      className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Remover
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="logoUrl" className="block text-xs font-medium text-slate-500 mb-1">
+                    Ou informe o link direto da Logo (URL da imagem):
+                  </label>
+                  <input
+                    type="url"
+                    id="logoUrl"
+                    name="logoUrl"
+                    value={formData.logoUrl}
+                    onChange={handleChange}
+                    placeholder="https://exemplo.com/logo.png"
+                    className="block w-full rounded-md shadow-sm sm:text-xs px-3 py-2 border border-slate-300 focus:ring-blue-500 focus:border-blue-500 font-mono text-slate-700 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO: Classificação & Gestão (TAG Multimed) */}
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-600" />
+                Classificação & Gestão (TAG Multimed)
+              </h2>
+              <span className="text-xs font-medium text-slate-400">Utilizado para identificação e filtros</span>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">
+              Indique como a empresa se relaciona com a Multimed para facilitar a organização e relatórios futuros.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Opção 1: Gerenciada pela Multimed */}
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, tipoGestao: 'gerenciada_multimed' }))}
+                className={`flex flex-col text-left p-4 rounded-xl border-2 transition-all relative ${
+                  formData.tipoGestao === 'gerenciada_multimed'
+                    ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-2 ring-emerald-500/20'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Gestão Multimed
+                  </span>
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                      formData.tipoGestao === 'gerenciada_multimed'
+                        ? 'border-emerald-600 bg-emerald-600'
+                        : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {formData.tipoGestao === 'gerenciada_multimed' && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="font-semibold text-sm text-slate-900 mb-1">
+                  Gerenciada pela Multimed
+                </div>
+                <div className="text-xs text-slate-500 leading-relaxed">
+                  A equipe Multimed realiza a gestão ativa da empresa, atendimentos e demandas.
+                </div>
+              </button>
+
+              {/* Opção 2: Cliente Multimed (Não Gerenciada) */}
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, tipoGestao: 'cliente_nao_gerenciada' }))}
+                className={`flex flex-col text-left p-4 rounded-xl border-2 transition-all relative ${
+                  formData.tipoGestao === 'cliente_nao_gerenciada'
+                    ? 'border-blue-500 bg-blue-50/50 shadow-sm ring-2 ring-blue-500/20'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    Cliente Multimed
+                  </span>
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                      formData.tipoGestao === 'cliente_nao_gerenciada'
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {formData.tipoGestao === 'cliente_nao_gerenciada' && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="font-semibold text-sm text-slate-900 mb-1">
+                  Cliente Multimed (Não Gerenciada)
+                </div>
+                <div className="text-xs text-slate-500 leading-relaxed">
+                  Empresa é cliente da Multimed, mas a gestão do portal é realizada por ela mesma.
+                </div>
+              </button>
+
+              {/* Opção 3: Plataforma Própria */}
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, tipoGestao: 'plataforma_propria' }))}
+                className={`flex flex-col text-left p-4 rounded-xl border-2 transition-all relative ${
+                  formData.tipoGestao === 'plataforma_propria'
+                    ? 'border-purple-500 bg-purple-50/50 shadow-sm ring-2 ring-purple-500/20'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Plataforma Própria
+                  </span>
+                  <div
+                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                      formData.tipoGestao === 'plataforma_propria'
+                        ? 'border-purple-600 bg-purple-600'
+                        : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {formData.tipoGestao === 'plataforma_propria' && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                </div>
+                <div className="font-semibold text-sm text-slate-900 mb-1">
+                  Plataforma Própria
+                </div>
+                <div className="text-xs text-slate-500 leading-relaxed">
+                  Cliente adquiriu a plataforma por conta própria para gerenciar seus colaboradores.
+                </div>
+              </button>
             </div>
           </div>
 

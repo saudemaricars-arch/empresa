@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Company } from '../types';
-import { Link2, Copy, Check, ExternalLink, Globe, Eye, Palette, Info, Upload, Loader2, Image as ImageIcon, X, LayoutTemplate } from 'lucide-react';
+import { Link2, Copy, Check, ExternalLink, Globe, Eye, Palette, Upload, Loader2, Image as ImageIcon, X, LayoutTemplate, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { uploadImage } from '../lib/storageService';
 
@@ -60,58 +60,71 @@ export function PublicPageTab({ company, onUpdateCompany, onOpenPreview }: Publi
     >
       {/* Link Público */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Link da Página Pública</h2>
-            <p className="text-sm text-slate-500">Compartilhe este link para que qualquer pessoa possa ver a página da empresa</p>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Globe className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold text-slate-900">Link da Página Pública</h2>
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  <Lock className="w-3 h-3 text-slate-400" /> Link Travado
+                </span>
+              </div>
+              <p className="text-sm text-slate-500">Compartilhe este link para que qualquer pessoa possa ver a página da empresa</p>
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 gap-2 overflow-hidden">
-            <Link2 className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="text-sm text-slate-700 truncate font-mono">{publicUrl}</span>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div
+            className="flex-1 flex items-center bg-slate-100/90 border border-slate-200 rounded-lg px-3.5 py-2.5 gap-2.5 overflow-hidden shadow-inner cursor-not-allowed select-all"
+            title="Link protegido contra alterações manuais"
+          >
+            <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              readOnly
+              value={publicUrl}
+              onFocus={(e) => e.target.select()}
+              className="w-full bg-transparent text-sm text-slate-700 font-mono focus:outline-none cursor-default truncate select-all"
+              tabIndex={-1}
+            />
           </div>
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              copied
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4" />
-                Copiado!
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                Copiar
-              </>
-            )}
-          </button>
-          <a
-            href={publicUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Abrir
-          </a>
-        </div>
-
-        <div className="mt-4 flex items-start gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-2.5 rounded-lg border border-slate-100">
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>
-            Slug da empresa: <code className="font-mono text-slate-600">{company.slug}</code>.
-            Esta URL é gerada automaticamente a partir do nome da empresa.
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all shadow-sm ${
+                copied
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+              title="Copiar link da página pública"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copiar
+                </>
+              )}
+            </button>
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              title="Abrir página pública em nova aba"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Abrir
+            </a>
+          </div>
         </div>
       </div>
 

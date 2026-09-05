@@ -173,7 +173,9 @@ export function AtestadoModal({ empresaId, empresaNome, primaryColor, onClose }:
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-1.5">WhatsApp / Telefone *</label>
+                    <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                      WhatsApp / Telefone * <span className="text-blue-600 font-normal text-[11px]">(obrigatório para retorno)</span>
+                    </label>
                     <input
                       type="tel"
                       required

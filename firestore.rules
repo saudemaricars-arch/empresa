@@ -30,6 +30,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── Posts Universais (Gestão Central de Publicações) ───────────────────
+    match /postsUniversais/{postId} {
+      allow read, write: if isAdmin();
+    }
+
     // ─── Empresas ─────────────────────────────────────────────────────────
     match /empresas/{empresaId} {
       // Leitura pública (páginas públicas das empresas)
