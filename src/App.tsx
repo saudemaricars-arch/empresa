@@ -280,7 +280,7 @@ export default function App() {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-lg text-white">CorpCore DB</span>
+              <span className="font-semibold text-lg text-white">Multimed Conecta</span>
             </div>
             {/* Indicador de conexão */}
             <div title={loadingState === 'ready' ? 'Conectado ao Firebase' : 'Conectando...'}>
@@ -412,7 +412,7 @@ export default function App() {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <div className="font-medium text-slate-900">CorpCore DB</div>
+          <div className="font-medium text-slate-900">Multimed Conecta</div>
           <div className="w-10" />
         </header>
 

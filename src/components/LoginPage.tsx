@@ -40,7 +40,7 @@ export function LoginPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/30">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-1">CorpCore DB</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-1">Multimed Conecta</h1>
           <p className="text-slate-500 font-medium">Área Administrativa</p>
         </div>
 
@@ -64,7 +64,7 @@ export function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@corpcore.com"
+                  placeholder="admin@multimedconecta.com.br"
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all min-h-[48px]"
                 />
               </div>

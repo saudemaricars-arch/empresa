@@ -38,7 +38,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
   useEffect(() => {
     if (isPreview) return;
     const prev = document.title;
-    document.title = `${nome} | CorpCore DB`;
+    document.title = `${nome} | Multimed Conecta`;
 
     // Meta description
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
@@ -314,7 +314,7 @@ export function CompanyPublicPage({ company, onBack, isPreview = false }: Compan
           </div>
           <div className="flex items-center gap-2 text-slate-500 text-xs">
             <span>Powered by</span>
-            <span className="font-bold" style={{ color: primaryColor }}>CorpCore DB</span>
+            <span className="font-bold" style={{ color: primaryColor }}>Multimed Conecta</span>
           </div>
         </div>
         {!isPreview && (

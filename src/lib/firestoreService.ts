@@ -267,22 +267,13 @@ export async function getEmpresaBySlug(slug: string): Promise<Company | null> {
   for (const ds of snap.docs) {
     if (ds.data().slug === slug) {
       const c = docToCompany(ds.id, ds.data() as Record<string, unknown>);
-      const [nSnap, sSnap, dSnap, aSnap, auxSnap, asSnap, stSnap] = await Promise.all([
-        getDocs(query(noticiasCol(ds.id),  orderBy('data',     'desc'))),
-        getDocs(query(sugestoesCol(ds.id), orderBy('criadoEm', 'desc'))),
-        getDocs(query(denunciasCol(ds.id), orderBy('criadoEm', 'desc'))),
-        getDocs(query(atestadosCol(ds.id), orderBy('criadoEm', 'desc'))),
-        getDocs(query(auxiliosCol(ds.id),  orderBy('criadoEm', 'desc'))),
-        getDocs(query(apoioSaudeCol(ds.id),  orderBy('criadoEm', 'desc'))),
-        getDocs(query(segurancaTrabalhoCol(ds.id),  orderBy('criadoEm', 'desc'))),
-      ]);
-      c.noticias  = nSnap.docs.map(n => docToNoticia(n.id,  n.data() as Record<string, unknown>));
-      c.sugestoes = sSnap.docs.map(s => docToSugestao(s.id, s.data() as Record<string, unknown>));
-      c.denuncias = dSnap.docs.map(d => docToDenuncia(d.id, d.data() as Record<string, unknown>));
-      c.atestados = aSnap.docs.map(a => docToAtestado(a.id, a.data() as Record<string, unknown>));
-      c.auxilios  = auxSnap.docs.map(x => docToAuxilio(x.id, x.data() as Record<string, unknown>));
-      c.apoioSaude  = asSnap.docs.map(x => docToApoioSaude(x.id, x.data() as Record<string, unknown>));
-      c.segurancaTrabalho = stSnap.docs.map(x => docToSegurancaTrabalho(x.id, x.data() as Record<string, unknown>));
+      try {
+        const nSnap = await getDocs(query(noticiasCol(ds.id), orderBy('data', 'desc')));
+        c.noticias = nSnap.docs.map(n => docToNoticia(n.id, n.data() as Record<string, unknown>));
+      } catch (err) {
+        console.warn('Erro ao carregar notícias públicas:', err);
+        c.noticias = [];
+      }
       return c;
     }
   }

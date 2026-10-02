@@ -2,31 +2,57 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Helpers de Role ──────────────────────────────────────────────────
+    // ─── Helpers de Role e Segurança Aprimorada ───────────────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      // Admin: autenticado, mas SEM vínculo em empresaUsuarios
-      // (verificado no cliente via ausência do doc)
-      // Para Firestore Rules, verificamos se existe o doc de vínculo
-      return isAuthenticated() &&
-        !exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid));
+    function isDesativado() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)).data.role == 'desativado') ||
+        exists(/databases/$(database)/documents/usuariosDesativados/$(request.auth.uid))
+      );
     }
 
     function isEmpresaOwner(empresaId) {
-      // Empresa: tem um doc em empresaUsuarios vinculado a este empresaId
+      // Empresa ativa: possui vínculo com a empresa e role == 'empresa' (não desativada)
       return isAuthenticated() &&
+        !isDesativado() &&
         exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)).data.empresaId == empresaId;
+        get(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)).data.empresaId == empresaId &&
+        get(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid)).data.role == 'empresa';
     }
 
-    // ─── empresaUsuarios — vínculo uid ↔ empresa ─────────────────────────
+    function isAdmin() {
+      // Admin: Autenticado, não desativado, e:
+      // 1. Presente na coleção de admins ou claim admin
+      // 2. OU não possui vínculo em empresaUsuarios (compatibilidade retroativa protegida contra desativados)
+      return isAuthenticated() &&
+        !isDesativado() &&
+        (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+          request.auth.token.role == 'admin' ||
+          !exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid))
+        );
+    }
+
+    // ─── Coleção de Administradores Explícitos ─────────────────────────────
+    match /admins/{uid} {
+      allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ─── Coleção de Bloqueio (Usuários Desativados) ─────────────────────────
+    match /usuariosDesativados/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    // ─── empresaUsuarios — vínculo uid ↔ empresa ───────────────────────────
     match /empresaUsuarios/{uid} {
       // Leitura: o próprio usuário lê seu vínculo OU admin pode listar todos
       allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      // Escrita: apenas admins (não têm vínculo)
+      // Escrita: apenas admins
       allow write: if isAdmin();
     }
 
@@ -48,43 +74,44 @@ service cloud.firestore {
         allow write: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
-      // ─── Subcoleções de demandas ─────────────────────────────────────────
+      // ─── Subcoleções de demandas (proteção de integridade e dados sensíveis) ───
       // Leitura: admin ou a própria empresa
-      // Escrita: qualquer um pode criar (página pública) + admin/empresa podem atualizar status
+      // Criação: pública, mas validando status inicial para impedir forja de tratativas
+      // Atualização/Exclusão: restrito a admin ou empresa dona
 
       match /sugestoes/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true; // página pública envia
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /denuncias/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true; // página pública envia
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /atestados/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true; // página pública envia
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /auxilios/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true;
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /apoioSaude/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true;
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /segurancaTrabalho/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if true;
+        allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
     }

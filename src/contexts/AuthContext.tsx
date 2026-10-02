@@ -49,18 +49,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const vinculo = await getEmpresaUsuarioPorUid(currentUser.uid);
 
         if (vinculo) {
-          // É um usuário de empresa
-          setRole('empresa');
-          setEmpresaId(vinculo.empresaId);
+          if ((vinculo as any).role === 'desativado') {
+            console.warn('Acesso negado: Usuário de empresa desativado.');
+            setRole(null);
+            setEmpresaId(null);
+          } else {
+            // É um usuário de empresa ativo
+            setRole('empresa');
+            setEmpresaId(vinculo.empresaId);
+          }
         } else {
           // Não há vínculo → é um administrador do sistema
           setRole('admin');
           setEmpresaId(null);
         }
       } catch (err) {
-        console.error('Erro ao verificar role do usuário:', err);
-        // Em caso de falha, assume admin para não bloquear
-        setRole('admin');
+        console.error('Erro ao verificar permissões do usuário:', err);
+        // Princípio Fail-Closed: em caso de erro, bloqueia acesso por segurança
+        setRole(null);
         setEmpresaId(null);
       } finally {
         setLoading(false);

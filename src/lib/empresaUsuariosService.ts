@@ -157,8 +157,24 @@ export async function removerUsuarioEmpresa(
   uid: string,
   empresaId: string
 ): Promise<void> {
-  // Remove o vínculo do empresaUsuarios
-  await deleteDoc(doc(db, 'empresaUsuarios', uid));
+  // Segurança: ao invés de deletar o documento (o que tornaria o usuário órfão e com privilégios de admin),
+  // marcamos o usuário como explicitamente desativado e desvinculado.
+  const { setDoc: setD, serverTimestamp: sTs } = await import('firebase/firestore');
+  await setD(
+    doc(db, 'empresaUsuarios', uid),
+    {
+      role: 'desativado',
+      empresaId: null,
+      desativadoEm: sTs(),
+    },
+    { merge: true }
+  );
+
+  // Registra na coleção de segurança para bloqueio imediato no Firestore Rules
+  await setD(doc(db, 'usuariosDesativados', uid), {
+    uid,
+    desativadoEm: sTs(),
+  });
 
   // Verifica se ainda existem outros usuários dessa empresa
   const { getDocs: getD } = await import('firebase/firestore');
