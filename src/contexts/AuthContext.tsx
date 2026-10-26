@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 import { Loader2 } from 'lucide-react';
 import { getEmpresaUsuarioPorUid } from '../lib/empresaUsuariosService';
 import { UserRole } from '../types';
@@ -59,9 +60,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setEmpresaId(vinculo.empresaId);
           }
         } else {
-          // Não há vínculo → é um administrador do sistema
-          setRole('admin');
-          setEmpresaId(null);
+          // Não há vínculo em empresaUsuarios → Verifica se já possui registro em /admins/{uid}
+          const adminRef = doc(db, 'admins', currentUser.uid);
+          const adminSnap = await getDoc(adminRef);
+
+          if (adminSnap.exists()) {
+            setRole('admin');
+            setEmpresaId(null);
+          } else {
+            // Bootstrap seguro: registra o administrador mestre na coleção /admins
+            try {
+              await setDoc(adminRef, {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                role: 'admin',
+                criadoEm: serverTimestamp(),
+              });
+              console.info(`✅ Administrador [${currentUser.email}] cadastrado com sucesso em /admins.`);
+              setRole('admin');
+              setEmpresaId(null);
+            } catch (saveErr) {
+              console.warn('Registro em /admins não pôde ser gravado, permitindo acesso da sessão atual:', saveErr);
+              setRole('admin');
+              setEmpresaId(null);
+            }
+          }
         }
       } catch (err) {
         console.error('Erro ao verificar permissões do usuário:', err);

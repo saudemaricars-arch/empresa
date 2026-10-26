@@ -180,6 +180,30 @@ export const TIPOS_GESTAO: Record<TipoGestao, TipoGestaoInfo> = {
   },
 };
 
+export type TipoDocumentoOcupacional =
+  | 'pgr'
+  | 'pcmso'
+  | 'ltcat'
+  | 'ergonomia'
+  | 'aso'
+  | 'relatorio_anual'
+  | 'ordem_servico'
+  | 'outro';
+
+export interface DocumentoOcupacional {
+  id: string;
+  titulo: string;
+  tipo: TipoDocumentoOcupacional;
+  descricao?: string;
+  arquivoUrl: string;
+  dataEmissao: string;
+  dataValidade?: string;
+  versao?: string;
+  responsavelTecnico?: string;
+  tamanhoArquivo?: string;
+  criadoEm: string;
+}
+
 export interface Company {
   id: string;
   cnpj: string;
@@ -199,6 +223,7 @@ export interface Company {
   auxilios?: AuxilioSaudeMental[];
   apoioSaude?: ApoioSaude[];
   segurancaTrabalho?: SegurancaTrabalho[];
+  documentos?: DocumentoOcupacional[];
   // Campos da página pública
   slug: string;
   descricao?: string;
@@ -224,9 +249,30 @@ export interface EmpresaUsuario {
   uid: string;
   email: string;
   empresaId: string;
-  role: 'empresa';
+  role: 'empresa' | 'desativado';
   criadoEm: string;
   criadoPorAdmin: string;
+  desativadoEm?: string;
+}
+
+export interface AdminUsuario {
+  uid: string;
+  email: string;
+  role: 'admin';
+  criadoEm: string;
+  criadoPorAdmin?: string;
+}
+
+export interface UsuarioSistema {
+  uid: string;
+  email: string;
+  role: 'admin' | 'empresa' | 'desativado';
+  empresaId?: string;
+  empresaNome?: string;
+  criadoEm: string;
+  criadoPorAdmin?: string;
+  desativadoEm?: string;
 }
 
 export type UserRole = 'admin' | 'empresa' | null;
+

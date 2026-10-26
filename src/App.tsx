@@ -12,9 +12,11 @@ import { CompanyPublicPage } from './components/CompanyPublicPage';
 import { UniversalPostsTab } from './components/admin/UniversalPostsTab';
 import { CentralRecebimentos } from './components/admin/CentralRecebimentos';
 import { GestaoGlobal } from './components/admin/GestaoGlobal';
+import { GestaoUsuariosTab } from './components/admin/GestaoUsuariosTab';
 import { EmpresaPortal } from './components/empresa/EmpresaPortal';
+import { LandingContratacao } from './components/landing/LandingContratacao';
 import { Company, Noticia } from './types';
-import { LayoutDashboard, Building2, Menu, Search, Wifi, WifiOff, Loader2, Send, Inbox, Layers } from 'lucide-react';
+import { LayoutDashboard, Building2, Menu, Search, Wifi, WifiOff, Loader2, Send, Inbox, Layers, Users } from 'lucide-react';
 import { useHashRouter } from './hooks/useHashRouter';
 import { generateSlug, ensureUniqueSlug } from './utils/slug';
 import {
@@ -33,27 +35,68 @@ import { LoginPage } from './components/LoginPage';
 import { signOut } from 'firebase/auth';
 import { auth } from './lib/firebase';
 
-// ─── Estado de carregamento global ───────────────────────────────────────────
-
 type LoadingState = 'loading' | 'ready' | 'error';
 
-export default function App() {
+// ─── Rota Pública da Empresa (por slug) ─────────────────────────────────────
+function PublicCompanyRoute({ slug }: { slug: string }) {
+  const [publicCompany, setPublicCompany] = useState<Company | null | 'loading' | 'not-found'>('loading');
+
+  useEffect(() => {
+    setPublicCompany('loading');
+    getEmpresaBySlug(slug)
+      .then((c) => setPublicCompany(c ?? 'not-found'))
+      .catch(() => setPublicCompany('not-found'));
+  }, [slug]);
+
+  if (publicCompany === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-slate-400">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+          <span className="text-sm">Carregando página da empresa...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (publicCompany === 'not-found') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-center px-6">
+        <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-6">
+          <Building2 className="w-10 h-10 text-slate-400" />
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Empresa não encontrada</h1>
+        <p className="text-slate-500 mb-6">
+          Não existe nenhuma empresa com o endereço{' '}
+          <code className="text-slate-700 bg-slate-100 px-2 py-0.5 rounded font-mono text-sm">
+            {slug}
+          </code>
+        </p>
+        <a
+          href={window.location.pathname}
+          className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+        >
+          Voltar ao painel
+        </a>
+      </div>
+    );
+  }
+
+  return <CompanyPublicPage company={publicCompany} />;
+}
+
+// ─── Painel Admin Principal ────────────────────────────────────────────────
+function AdminApp({ user }: { user: any }) {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [migrated, setMigrated] = useState(false);
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'list' | 'create' | 'edit' | 'view' | 'universal-posts' | 'central-recebimentos'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'list' | 'create' | 'edit' | 'view' | 'universal-posts' | 'central-recebimentos' | 'gestao-global' | 'usuarios'>('dashboard');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState('');
 
-  // Página pública por slug (rota pública assíncrona)
-  const [publicCompany, setPublicCompany] = useState<Company | null | 'loading' | 'not-found'>('loading');
-
-  const { route, isPublicRoute } = useHashRouter();
-  const { user, role, empresaId } = useAuth();
-
-  // ─── Migração localStorage → Firestore (executa uma vez) ──────────────────
+  // Migração localStorage → Firestore
   useEffect(() => {
     migrateFromLocalStorage()
       .then((count) => {
@@ -63,18 +106,9 @@ export default function App() {
       .catch(() => setMigrated(true));
   }, []);
 
-  // ─── Listener em tempo real do Firestore ──────────────────────────────────
+  // Listener em tempo real do Firestore
   useEffect(() => {
-    // Se não estiver migrado, não faz nada
     if (!migrated) return;
-    
-    // Só carrega todas as empresas se o usuário for explicitamente um administrador
-    if (role !== 'admin') {
-      if (role === 'empresa' || !user) {
-        setLoadingState('ready');
-      }
-      return;
-    }
 
     const unsubscribe = onEmpresasSnapshot(
       (data) => {
@@ -88,20 +122,7 @@ export default function App() {
     );
 
     return () => unsubscribe();
-  }, [migrated, role, user]);
-
-  // ─── Rota pública: busca empresa por slug ─────────────────────────────────
-  useEffect(() => {
-    if (!isPublicRoute) return;
-    const slug = route.params.slug;
-    setPublicCompany('loading');
-
-    getEmpresaBySlug(slug)
-      .then((c) => setPublicCompany(c ?? 'not-found'))
-      .catch(() => setPublicCompany('not-found'));
-  }, [isPublicRoute, route.params.slug]);
-
-  // ─── Handlers ─────────────────────────────────────────────────────────────
+  }, [migrated]);
 
   const handleSaveCompany = useCallback(
     async (companyData: Omit<Company, 'id' | 'noticias' | 'slug'>) => {
@@ -162,75 +183,6 @@ export default function App() {
     await signOut(auth);
   };
 
-  // ─── Rota Pública ─────────────────────────────────────────────────────────
-
-  if (isPublicRoute) {
-    if (publicCompany === 'loading') {
-      return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4 text-slate-400">
-            <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
-            <span className="text-sm">Carregando página da empresa...</span>
-          </div>
-        </div>
-      );
-    }
-
-    if (publicCompany === 'not-found') {
-      return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-center px-6">
-          <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-6">
-            <Building2 className="w-10 h-10 text-slate-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Empresa não encontrada</h1>
-          <p className="text-slate-500 mb-6">
-            Não existe nenhuma empresa com o endereço{' '}
-            <code className="text-slate-700 bg-slate-100 px-2 py-0.5 rounded font-mono text-sm">
-              {route.params.slug}
-            </code>
-          </p>
-          <a
-            href={window.location.pathname}
-            className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            Voltar ao painel
-          </a>
-        </div>
-      );
-    }
-
-    return <CompanyPublicPage company={publicCompany} />;
-  }
-
-  // ─── Autenticação Administrativa ──────────────────────────────────────────
-
-  const isLoginRoute = route.path === 'login' || route.path === '/login';
-
-  useEffect(() => {
-    if (isLoginRoute && user) {
-      window.location.hash = '/';
-    } else if (!isLoginRoute && !user && !isPublicRoute) {
-      window.location.hash = '/login';
-    }
-  }, [isLoginRoute, user, isPublicRoute]);
-
-  // Enquanto aguarda o useEffect redirecionar, retorna null ou já renderiza a tela certa
-  if (isLoginRoute && user) {
-    return null;
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
-  // ─── Portal da Empresa (role = 'empresa') ────────────────────────────────────────
-
-  if (role === 'empresa' && empresaId) {
-    return <EmpresaPortal empresaId={empresaId} />;
-  }
-
-  // ─── Painel Admin (Logado) ────────────────────────────────────────────────
-
   const existingCnpjs = companies.map((c) => c.cnpj);
   const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
@@ -238,8 +190,9 @@ export default function App() {
     { id: 'dashboard', label: 'Painel Geral', icon: LayoutDashboard },
     { id: 'empresas', label: 'Empresas Cadastradas', icon: Building2 },
     { id: 'central-recebimentos', label: 'Central de Recebimentos', icon: Inbox },
-    { id: 'universal-posts', label: 'Posts Universais', icon: Send },
     { id: 'gestao-global', label: 'Gestão de Demandas', icon: Layers },
+    { id: 'universal-posts', label: 'Posts Universais', icon: Send },
+    { id: 'usuarios', label: 'Gestão de Usuários', icon: Users },
   ];
 
   const handleNavClick = (id: string) => {
@@ -248,6 +201,7 @@ export default function App() {
     else if (id === 'universal-posts') setCurrentView('universal-posts');
     else if (id === 'central-recebimentos') setCurrentView('central-recebimentos');
     else if (id === 'gestao-global') setCurrentView('gestao-global');
+    else if (id === 'usuarios') setCurrentView('usuarios');
     setIsSidebarOpen(false);
   };
 
@@ -302,7 +256,9 @@ export default function App() {
                   (item.id === 'empresas' && currentView === 'list') ||
                   (item.id === 'dashboard' && currentView === 'dashboard') ||
                   (item.id === 'central-recebimentos' && currentView === 'central-recebimentos') ||
-                  (item.id === 'universal-posts' && currentView === 'universal-posts');
+                  (item.id === 'universal-posts' && currentView === 'universal-posts') ||
+                  (item.id === 'gestao-global' && currentView === 'gestao-global') ||
+                  (item.id === 'usuarios' && currentView === 'usuarios');
                 return (
                   <button
                     key={item.id}
@@ -455,6 +411,16 @@ export default function App() {
             <GestaoGlobal companies={companies} />
           )}
 
+          {currentView === 'usuarios' && (
+            <GestaoUsuariosTab
+              companies={companies}
+              onViewCompany={(id) => {
+                setSelectedCompanyId(id);
+                setCurrentView('view');
+              }}
+            />
+          )}
+
           {currentView === 'list' && (
             <CompanyList
               companies={companies}
@@ -500,4 +466,66 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+// ─── Componente Raiz: Router Limpo & Sem Risco de Conflito de Hooks ────────
+export default function App() {
+  const { route, isPublicRoute } = useHashRouter();
+  const { user, role, empresaId } = useAuth();
+
+  // Detecção de domínio: sitemrs.web.app abre a Landing Page de Serviços como página inicial
+  const isSitemrsHost = typeof window !== 'undefined' && (
+    window.location.hostname.includes('sitemrs') ||
+    window.location.search.includes('site=mrs')
+  );
+
+  const isContratarRoute =
+    route.segments[0] === 'contratar' ||
+    route.path === 'contratar' ||
+    route.path === '/contratar' ||
+    (isSitemrsHost && (!route.path || route.path === '/'));
+  const isLoginRoute = route.path === 'login' || route.path === '/login';
+
+  // Redirecionamento seguro de rota de login
+  useEffect(() => {
+    if (isLoginRoute && user) {
+      window.location.hash = '/';
+    } else if (!isLoginRoute && !user && !isPublicRoute && !isContratarRoute) {
+      window.location.hash = '/login';
+    }
+  }, [isLoginRoute, user, isPublicRoute, isContratarRoute]);
+
+  // 1. Rota de Contratação (Landing Page Pública)
+  if (isContratarRoute) {
+    return <LandingContratacao onGoToLogin={() => { window.location.hash = '/login'; }} />;
+  }
+
+  // 2. Rota Pública da Empresa (por slug)
+  if (isPublicRoute && route.params.slug) {
+    return <PublicCompanyRoute slug={route.params.slug} />;
+  }
+
+  // 3. Aguardando redirecionamento de login
+  if (isLoginRoute && user) {
+    return null;
+  }
+
+  // 4. Usuário não autenticado
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  // 5. Rota Direta do Portal da Empresa (/#/portal/:empresaId)
+  const isPortalRoute = route.segments[0] === 'portal' && !!route.segments[1];
+  if (isPortalRoute) {
+    return <EmpresaPortal empresaId={route.segments[1]} />;
+  }
+
+  // 6. Portal da Empresa Contratante Autenticada (role = 'empresa')
+  if (role === 'empresa' && empresaId) {
+    return <EmpresaPortal empresaId={empresaId} />;
+  }
+
+  // 6. Painel do Administrador Geral
+  return <AdminApp user={user} />;
 }

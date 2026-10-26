@@ -25,22 +25,23 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Admin: Autenticado, não desativado, e:
-      // 1. Presente na coleção de admins ou claim admin
-      // 2. OU não possui vínculo em empresaUsuarios (compatibilidade retroativa protegida contra desativados)
+      // Admin Seguro: Autenticado, não desativado, e:
+      // 1. Presente explicitamente na coleção de admins
+      // 2. OU claim admin verificada no token de autenticação
       return isAuthenticated() &&
         !isDesativado() &&
         (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-          request.auth.token.role == 'admin' ||
-          !exists(/databases/$(database)/documents/empresaUsuarios/$(request.auth.uid))
+          request.auth.token.role == 'admin'
         );
     }
 
     // ─── Coleção de Administradores Explícitos ─────────────────────────────
     match /admins/{uid} {
       allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAdmin();
+      // Permite o primeiro registro inicial do administrador autenticado ou gestão por admin
+      allow create: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow update, delete: if isAdmin();
     }
 
     // ─── Coleção de Bloqueio (Usuários Desativados) ─────────────────────────
@@ -63,8 +64,10 @@ service cloud.firestore {
 
     // ─── Empresas ─────────────────────────────────────────────────────────
     match /empresas/{empresaId} {
-      // Leitura pública (páginas públicas das empresas)
-      allow read: if true;
+      // Leitura individual de documento (get) aberta para páginas públicas
+      allow get: if true;
+      // Listagem geral (list): restrita a admins OU busca filtrada com limite de até 5 resultados
+      allow list: if isAdmin() || (request.query.limit <= 5);
       // Escrita: admin ou a própria empresa dona
       allow write: if isAdmin() || isEmpresaOwner(empresaId);
 
@@ -76,24 +79,27 @@ service cloud.firestore {
 
       // ─── Subcoleções de demandas (proteção de integridade e dados sensíveis) ───
       // Leitura: admin ou a própria empresa
-      // Criação: pública, mas validando status inicial para impedir forja de tratativas
+      // Criação: pública, mas validando status e limite de payload contra DoS
       // Atualização/Exclusão: restrito a admin ou empresa dona
 
       match /sugestoes/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if request.resource.data.status in ['nova', 'pendente'];
+        allow create: if request.resource.data.status in ['nova', 'pendente']
+                      && (!('mensagem' in request.resource.data) || request.resource.data.mensagem.size() <= 10000);
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /denuncias/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if request.resource.data.status in ['nova', 'pendente'];
+        allow create: if request.resource.data.status in ['nova', 'pendente']
+                      && (!('descricao' in request.resource.data) || request.resource.data.descricao.size() <= 15000);
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
       match /atestados/{document=**} {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
-        allow create: if request.resource.data.status in ['nova', 'pendente'];
+        allow create: if request.resource.data.status in ['nova', 'pendente']
+                      && (!('nomeFuncionario' in request.resource.data) || request.resource.data.nomeFuncionario.size() <= 150);
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
       }
 
@@ -113,6 +119,11 @@ service cloud.firestore {
         allow read: if isAdmin() || isEmpresaOwner(empresaId);
         allow create: if request.resource.data.status in ['nova', 'pendente'];
         allow update, delete: if isAdmin() || isEmpresaOwner(empresaId);
+      }
+
+      match /documentos/{document=**} {
+        allow read: if isAdmin() || isEmpresaOwner(empresaId);
+        allow write: if isAdmin() || isEmpresaOwner(empresaId);
       }
     }
   }

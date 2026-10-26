@@ -10,13 +10,14 @@
 
 import {
   collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
-  getDocs, onSnapshot, query, orderBy, serverTimestamp,
+  getDocs, onSnapshot, query, orderBy, serverTimestamp, where, limit,
   Timestamp, writeBatch, type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import {
   Company, Noticia, Sugestao, Denuncia, Atestado, AuxilioSaudeMental,
   ApoioSaude, SegurancaTrabalho, TipoGestao, PostUniversal, PostUniversalDestinatario,
+  DocumentoOcupacional, TipoDocumentoOcupacional,
 } from '../types';
 
 // ─── Refs de coleção ─────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ const atestadosCol = (id: string) => collection(db, 'empresas', id, 'atestados')
 const auxiliosCol = (id: string) => collection(db, 'empresas', id, 'auxilios');
 const apoioSaudeCol = (id: string) => collection(db, 'empresas', id, 'apoioSaude');
 const segurancaTrabalhoCol = (id: string) => collection(db, 'empresas', id, 'segurancaTrabalho');
+const documentosCol = (id: string) => collection(db, 'empresas', id, 'documentos');
 
 // ─── Helpers de conversão ─────────────────────────────────────────────────────
 
@@ -72,6 +74,7 @@ function docToCompany(id: string, d: Record<string, unknown>): Company {
     auxilios: [],
     apoioSaude: [],
     segurancaTrabalho: [],
+    documentos: [],
   };
 }
 
@@ -220,6 +223,22 @@ function docToSegurancaTrabalho(id: string, d: Record<string, unknown>): Seguran
   };
 }
 
+function docToDocumento(id: string, d: Record<string, unknown>): DocumentoOcupacional {
+  return {
+    id,
+    titulo: (d.titulo as string) || '',
+    tipo: (d.tipo as TipoDocumentoOcupacional) || 'outro',
+    descricao: (d.descricao as string) || undefined,
+    arquivoUrl: (d.arquivoUrl as string) || '',
+    dataEmissao: (d.dataEmissao as string) || '',
+    dataValidade: (d.dataValidade as string) || undefined,
+    versao: (d.versao as string) || undefined,
+    responsavelTecnico: (d.responsavelTecnico as string) || undefined,
+    tamanhoArquivo: (d.tamanhoArquivo as string) || undefined,
+    criadoEm: tsToIso(d.criadoEm),
+  };
+}
+
 // ─── Empresas ─────────────────────────────────────────────────────────────────
 
 export function onEmpresasSnapshot(cb: (companies: Company[]) => void, onError?: (err: any) => void): Unsubscribe {
@@ -263,19 +282,20 @@ export function onEmpresasSnapshot(cb: (companies: Company[]) => void, onError?:
 }
 
 export async function getEmpresaBySlug(slug: string): Promise<Company | null> {
-  const snap = await getDocs(empresasCol());
-  for (const ds of snap.docs) {
-    if (ds.data().slug === slug) {
-      const c = docToCompany(ds.id, ds.data() as Record<string, unknown>);
-      try {
-        const nSnap = await getDocs(query(noticiasCol(ds.id), orderBy('data', 'desc')));
-        c.noticias = nSnap.docs.map(n => docToNoticia(n.id, n.data() as Record<string, unknown>));
-      } catch (err) {
-        console.warn('Erro ao carregar notícias públicas:', err);
-        c.noticias = [];
-      }
-      return c;
+  const q = query(empresasCol(), where('slug', '==', slug), limit(1));
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    const ds = snap.docs[0];
+    const c = docToCompany(ds.id, ds.data() as Record<string, unknown>);
+    try {
+      const nSnap = await getDocs(query(noticiasCol(ds.id), orderBy('data', 'desc')));
+      c.noticias = nSnap.docs.map(n => docToNoticia(n.id, n.data() as Record<string, unknown>));
+    } catch (err) {
+      console.warn('Erro ao carregar notícias públicas:', err);
+      c.noticias = [];
     }
+    return c;
   }
   return null;
 }
@@ -555,10 +575,14 @@ export async function deleteUniversalPostByTitle(empresaIds: string[], tituloExa
   return count;
 }
 
-export function onNoticiasSnapshot(empresaId: string, cb: (n: Noticia[]) => void): Unsubscribe {
+export function onNoticiasSnapshot(empresaId: string, cb: (n: Noticia[]) => void, onError?: (err: any) => void): Unsubscribe {
   return onSnapshot(
     query(noticiasCol(empresaId), orderBy('data', 'desc')),
-    snap => cb(snap.docs.map(d => docToNoticia(d.id, d.data() as Record<string, unknown>)))
+    snap => cb(snap.docs.map(d => docToNoticia(d.id, d.data() as Record<string, unknown>))),
+    err => {
+      console.warn('Snapshot listener notice (noticias):', err.message);
+      if (onError) onError(err);
+    }
   );
 }
 
@@ -589,10 +613,14 @@ export async function updateSugestaoStatus(
   await updateDoc(doc(db, 'empresas', empresaId, 'sugestoes', sugestaoId), { status });
 }
 
-export function onSugestoesSnapshot(empresaId: string, cb: (s: Sugestao[]) => void): Unsubscribe {
+export function onSugestoesSnapshot(empresaId: string, cb: (s: Sugestao[]) => void, onError?: (err: any) => void): Unsubscribe {
   return onSnapshot(
     query(sugestoesCol(empresaId), orderBy('criadoEm', 'desc')),
-    snap => cb(snap.docs.map(d => docToSugestao(d.id, d.data() as Record<string, unknown>)))
+    snap => cb(snap.docs.map(d => docToSugestao(d.id, d.data() as Record<string, unknown>))),
+    err => {
+      console.warn('Snapshot listener notice (sugestoes):', err.message);
+      if (onError) onError(err);
+    }
   );
 }
 
@@ -623,10 +651,14 @@ export async function updateDenunciaStatus(
   await updateDoc(doc(db, 'empresas', empresaId, 'denuncias', denunciaId), { status });
 }
 
-export function onDenunciasSnapshot(empresaId: string, cb: (d: Denuncia[]) => void): Unsubscribe {
+export function onDenunciasSnapshot(empresaId: string, cb: (d: Denuncia[]) => void, onError?: (err: any) => void): Unsubscribe {
   return onSnapshot(
     query(denunciasCol(empresaId), orderBy('criadoEm', 'desc')),
-    snap => cb(snap.docs.map(d => docToDenuncia(d.id, d.data() as Record<string, unknown>)))
+    snap => cb(snap.docs.map(d => docToDenuncia(d.id, d.data() as Record<string, unknown>))),
+    err => {
+      console.warn('Snapshot listener notice (denuncias):', err.message);
+      if (onError) onError(err);
+    }
   );
 }
 
@@ -660,10 +692,14 @@ export async function updateAtestadoStatus(
   await updateDoc(doc(db, 'empresas', empresaId, 'atestados', atestadoId), { status });
 }
 
-export function onAtestadosSnapshot(empresaId: string, cb: (a: Atestado[]) => void): Unsubscribe {
+export function onAtestadosSnapshot(empresaId: string, cb: (a: Atestado[]) => void, onError?: (err: any) => void): Unsubscribe {
   return onSnapshot(
     query(atestadosCol(empresaId), orderBy('criadoEm', 'desc')),
-    snap => cb(snap.docs.map(d => docToAtestado(d.id, d.data() as Record<string, unknown>)))
+    snap => cb(snap.docs.map(d => docToAtestado(d.id, d.data() as Record<string, unknown>))),
+    err => {
+      console.warn('Snapshot listener notice (atestados):', err.message);
+      if (onError) onError(err);
+    }
   );
 }
 
@@ -690,12 +726,20 @@ export async function updateAuxilioStatus(
 
 export function onAuxiliosSnapshot(
   companyId: string,
-  cb: (auxilios: AuxilioSaudeMental[]) => void
+  cb: (auxilios: AuxilioSaudeMental[]) => void,
+  onError?: (err: any) => void
 ): Unsubscribe {
   const q = query(auxiliosCol(companyId), orderBy('criadoEm', 'desc'));
-  return onSnapshot(q, (snap) => {
-    cb(snap.docs.map((d) => docToAuxilio(d.id, d.data() as Record<string, unknown>)));
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => docToAuxilio(d.id, d.data() as Record<string, unknown>)));
+    },
+    (err) => {
+      console.warn('Snapshot listener notice (auxilios):', err.message);
+      if (onError) onError(err);
+    }
+  );
 }
 
 // ─── Apoio à Saúde ──────────────────────────────────────────────────────────
@@ -721,12 +765,20 @@ export async function updateApoioSaudeStatus(
 
 export function onApoioSaudeSnapshot(
   companyId: string,
-  cb: (items: ApoioSaude[]) => void
+  cb: (items: ApoioSaude[]) => void,
+  onError?: (err: any) => void
 ): Unsubscribe {
   const q = query(apoioSaudeCol(companyId), orderBy('criadoEm', 'desc'));
-  return onSnapshot(q, (snap) => {
-    cb(snap.docs.map((d) => docToApoioSaude(d.id, d.data() as Record<string, unknown>)));
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => docToApoioSaude(d.id, d.data() as Record<string, unknown>)));
+    },
+    (err) => {
+      console.warn('Snapshot listener notice (apoioSaude):', err.message);
+      if (onError) onError(err);
+    }
+  );
 }
 
 // ─── Segurança do Trabalho ──────────────────────────────────────────────────
@@ -752,12 +804,66 @@ export async function updateSegurancaTrabalhoStatus(
 
 export function onSegurancaTrabalhoSnapshot(
   companyId: string,
-  cb: (items: SegurancaTrabalho[]) => void
+  cb: (items: SegurancaTrabalho[]) => void,
+  onError?: (err: any) => void
 ): Unsubscribe {
   const q = query(segurancaTrabalhoCol(companyId), orderBy('criadoEm', 'desc'));
-  return onSnapshot(q, (snap) => {
-    cb(snap.docs.map((d) => docToSegurancaTrabalho(d.id, d.data() as Record<string, unknown>)));
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => docToSegurancaTrabalho(d.id, d.data() as Record<string, unknown>)));
+    },
+    (err) => {
+      console.warn('Snapshot listener notice (segurancaTrabalho):', err.message);
+      if (onError) onError(err);
+    }
+  );
+}
+
+// ─── Documentos Ocupacionais (PGR / PCMSO / LTCAT / ASOs) ──────────────────────
+
+export async function addDocumento(
+  companyId: string,
+  data: Omit<DocumentoOcupacional, 'id' | 'criadoEm'>
+): Promise<string> {
+  const ref = await addDoc(documentosCol(companyId), {
+    ...data,
+    criadoEm: serverTimestamp(),
   });
+  return ref.id;
+}
+
+export async function deleteDocumento(
+  companyId: string,
+  docId: string
+): Promise<void> {
+  await deleteDoc(doc(db, 'empresas', companyId, 'documentos', docId));
+}
+
+export async function updateDocumento(
+  companyId: string,
+  docId: string,
+  updates: Partial<Omit<DocumentoOcupacional, 'id' | 'criadoEm'>>
+): Promise<void> {
+  await updateDoc(doc(db, 'empresas', companyId, 'documentos', docId), updates);
+}
+
+export function onDocumentosSnapshot(
+  companyId: string,
+  cb: (items: DocumentoOcupacional[]) => void,
+  onError?: (err: any) => void
+): Unsubscribe {
+  const q = query(documentosCol(companyId), orderBy('criadoEm', 'desc'));
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.docs.map((d) => docToDocumento(d.id, d.data() as Record<string, unknown>)));
+    },
+    (err) => {
+      console.warn('Snapshot listener notice (documentos):', err.message);
+      if (onError) onError(err);
+    }
+  );
 }
 
 export interface TratativaDemandaData {

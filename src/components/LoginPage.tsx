@@ -102,9 +102,17 @@ export function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-slate-400 text-sm mt-8 font-medium">
-          Sistema Exclusivo para Administradores
-        </p>
+        <div className="text-center mt-6 space-y-2">
+          <a
+            href="#/contratar"
+            className="inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            Sua empresa ainda não é cliente? Conheça os planos e contrate &rarr;
+          </a>
+          <p className="text-center text-slate-400 text-xs font-medium">
+            Sistema seguro para Gestores e Administradores
+          </p>
+        </div>
       </div>
     </div>
   );

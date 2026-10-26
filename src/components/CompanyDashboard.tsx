@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Company, Noticia, TIPOS_GESTAO } from '../types';
 import {
   ArrowLeft, Building2, Users, MapPin, Phone, Mail, Briefcase, Calendar,
-  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart, Brain, PlusCircle, Stethoscope, ShieldCheck, KeyRound, Save
+  FileText, Plus, Trash2, Globe, Lightbulb, ShieldAlert, Image, User, Tag, Edit, Trash, Upload, Loader2, Info, FilePlus, Heart, Brain, PlusCircle, Stethoscope, ShieldCheck, KeyRound, Save, FolderCheck, ExternalLink
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { PublicPageTab } from './PublicPageTab';
@@ -12,6 +12,7 @@ import { AtestadosTab } from './admin/AtestadosTab';
 import { AuxiliosTab } from './admin/AuxiliosTab';
 import { ApoioSaudeTab } from './admin/ApoioSaudeTab';
 import { SegurancaTrabalhoTab } from './admin/SegurancaTrabalhoTab';
+import { DocumentosTab } from './admin/DocumentosTab';
 import { CriarAcessoEmpresaModal } from './admin/CriarAcessoEmpresaModal';
 import { AcessoEmpresaTab } from './admin/AcessoEmpresaTab';
 import { onNoticiasSnapshot } from '../lib/firestoreService';
@@ -29,7 +30,7 @@ interface CompanyDashboardProps {
   onDeleteCompany: (companyId: string) => void;
 }
 
-type TabId = 'overview' | 'blog' | 'pagina' | 'sugestoes' | 'denuncias' | 'atestados' | 'auxilios' | 'apoioSaude' | 'segurancaTrabalho' | 'acesso';
+type TabId = 'overview' | 'blog' | 'pagina' | 'sugestoes' | 'denuncias' | 'atestados' | 'documentos' | 'auxilios' | 'apoioSaude' | 'segurancaTrabalho' | 'acesso';
 
 export function CompanyDashboard({
   company, onBack, onAddNoticia, onDeleteNoticia, onUpdateNoticia, onUpdateCompany, onOpenPublicPreview,
@@ -134,6 +135,7 @@ export function CompanyDashboard({
     { id: 'sugestoes',  label: 'Sugestões',       icon: Lightbulb,  badge: novasSugestoes,  badgeColor: 'bg-orange-500' },
     { id: 'denuncias',  label: 'Denúncias',       icon: ShieldAlert, badge: novasDenuncias, badgeColor: 'bg-red-500'  },
     { id: 'atestados',  label: 'Atestados',       icon: FilePlus,    badge: novosAtestados, badgeColor: 'bg-blue-500' },
+    { id: 'documentos', label: 'Laudos & Documentos', icon: FolderCheck },
     { id: 'auxilios',   label: 'Apoio Emocional', icon: Brain,       badge: novosAuxilios,  badgeColor: 'bg-purple-500' },
     { id: 'apoioSaude', label: 'Apoio à Saúde',   icon: Stethoscope, badge: novosApoiosSaude, badgeColor: 'bg-teal-500' },
     { id: 'segurancaTrabalho', label: 'Seg. do Trabalho', icon: PlusCircle, badge: novosSegurancaTrabalho, badgeColor: 'bg-green-500' },
@@ -189,6 +191,16 @@ export function CompanyDashboard({
               <div className="hidden sm:block bg-slate-100 text-slate-700 font-medium px-3 py-1 text-sm rounded-lg border border-slate-200">
                 CNPJ: {formatCnpj(company.cnpj)}
               </div>
+              <a
+                href={`/#/portal/${company.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold border border-blue-200 shadow-sm transition-colors"
+                title="Abrir visão do Portal do Cliente"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Portal do Cliente
+              </a>
               <button
                 onClick={() => onEditCompany(company)}
                 className="p-2 bg-white text-slate-600 rounded-lg shadow-sm border border-slate-200 hover:text-blue-600 hover:border-blue-200 transition-colors"
@@ -589,6 +601,11 @@ export function CompanyDashboard({
       {/* ─── Atestados ─── */}
       {activeTab === 'atestados' && (
         <AtestadosTab atestados={company.atestados || []} empresaId={company.id} />
+      )}
+
+      {/* ─── Laudos & Documentos Ocupacionais ─── */}
+      {activeTab === 'documentos' && (
+        <DocumentosTab company={company} />
       )}
 
       {/* ─── Apoio Emocional ─── */}

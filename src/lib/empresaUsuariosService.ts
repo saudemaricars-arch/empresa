@@ -33,9 +33,10 @@ import {
   signOut,
   updatePassword,
   getAuth,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { db, auth } from './firebase';
-import { EmpresaUsuario } from '../types';
+import { EmpresaUsuario, AdminUsuario, UsuarioSistema } from '../types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -200,4 +201,104 @@ export async function removerUsuarioEmpresa(
       usuarioEmail: deleteField(),
     });
   }
+}
+
+// ─── Listar todos os usuários de empresa ──────────────────────────────────────
+
+export async function getAllEmpresaUsuarios(): Promise<EmpresaUsuario[]> {
+  const snap = await getDocs(collection(db, 'empresaUsuarios'));
+  return snap.docs.map(ds => {
+    const d = ds.data() as Record<string, unknown>;
+    return {
+      uid: ds.id,
+      email: (d.email as string) || '',
+      empresaId: (d.empresaId as string) || '',
+      role: ((d.role as string) === 'desativado' ? 'desativado' : 'empresa') as 'empresa' | 'desativado',
+      criadoEm: tsToIso(d.criadoEm),
+      criadoPorAdmin: (d.criadoPorAdmin as string) || 'admin',
+      desativadoEm: d.desativadoEm ? tsToIso(d.desativadoEm) : undefined,
+    };
+  });
+}
+
+// ─── Listar todos os administradores ──────────────────────────────────────────
+
+export async function getAllAdmins(): Promise<AdminUsuario[]> {
+  const snap = await getDocs(collection(db, 'admins'));
+  return snap.docs.map(ds => {
+    const d = ds.data() as Record<string, unknown>;
+    return {
+      uid: ds.id,
+      email: (d.email as string) || '',
+      role: 'admin' as const,
+      criadoEm: tsToIso(d.criadoEm),
+      criadoPorAdmin: (d.criadoPorAdmin as string) || 'sistema',
+    };
+  });
+}
+
+// ─── Alternar Status Ativo / Desativado de Usuário ────────────────────────────
+
+export async function toggleStatusUsuario(
+  uid: string,
+  novoStatus: 'ativo' | 'desativado',
+  empresaId?: string
+): Promise<void> {
+  const userRef = doc(db, 'empresaUsuarios', uid);
+  const desativadoRef = doc(db, 'usuariosDesativados', uid);
+
+  if (novoStatus === 'desativado') {
+    await setDoc(userRef, { role: 'desativado', desativadoEm: serverTimestamp() }, { merge: true });
+    await setDoc(desativadoRef, { uid, desativadoEm: serverTimestamp() });
+  } else {
+    await setDoc(userRef, { role: 'empresa', desativadoEm: deleteField() }, { merge: true });
+    await deleteDoc(desativadoRef).catch(() => {});
+  }
+}
+
+// ─── Enviar E-mail de Redefinição de Senha ────────────────────────────────────
+
+export async function enviarEmailRedefinicaoSenha(email: string): Promise<void> {
+  if (!email.trim()) throw new Error('E-mail não fornecido.');
+  await sendPasswordResetEmail(auth, email.trim());
+}
+
+// ─── Criar Novo Administrador ────────────────────────────────────────────────
+
+export async function criarUsuarioAdmin(
+  email: string,
+  senha: string,
+  adminCriadorEmail: string
+): Promise<{ uid: string; email: string }> {
+  const adminUser = auth.currentUser;
+  if (!adminUser) throw new Error('Admin atual não está autenticado.');
+
+  const { initializeApp, getApp } = await import('firebase/app');
+  const { getAuth: getSecondaryAuth } = await import('firebase/auth');
+
+  let secondaryApp;
+  try {
+    secondaryApp = getApp('secondary_admin');
+  } catch {
+    const firebaseModule = await import('./firebase');
+    const primaryApp = firebaseModule.default;
+    secondaryApp = initializeApp(primaryApp.options, 'secondary_admin');
+  }
+
+  const secondaryAuth = getSecondaryAuth(secondaryApp);
+  const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email.trim(), senha);
+  const newUser = userCredential.user;
+
+  await signOut(secondaryAuth);
+
+  // Grava na coleção admins
+  await setDoc(doc(db, 'admins', newUser.uid), {
+    uid: newUser.uid,
+    email: email.trim(),
+    role: 'admin',
+    criadoEm: serverTimestamp(),
+    criadoPorAdmin: adminCriadorEmail,
+  });
+
+  return { uid: newUser.uid, email: email.trim() };
 }
